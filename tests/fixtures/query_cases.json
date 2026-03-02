@@ -1,0 +1,14 @@
+{
+  "testSuites": [
+    {
+      "name": "btree_scan",
+      "expectedRows": 10000
+    },
+    {
+      "name": "concurrent_insert",
+      "threads": 8
+    }
+  ],
+  "last_test_run": "2026-03-02 16:36:33",
+  "suite_build": 1
+}
