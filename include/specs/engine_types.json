@@ -1,0 +1,8 @@
+{
+  "pageSize": 4096,
+  "maxKeysPerLeaf": 256,
+  "bufferPoolFrames": 8192,
+  "walFlushIntervalMs": 10,
+  "last_iteration": "v3",
+  "updated_at": "2026-03-03 14:25:57"
+}
