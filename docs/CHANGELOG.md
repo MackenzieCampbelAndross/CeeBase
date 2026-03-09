@@ -9,3 +9,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-03-05 21:56:09**: `docs(btree): implement dirty page flushing threshold in buffer pool manager`
   *Updated specifications and documentation details.*
 - [2026-03-06 12:16:28] chore(lock-manager): add checksum validation to log record headers
+- [2026-03-09 11:52:37] fix(lock-manager): eliminate pointer alignment issue on 64-bit platforms
