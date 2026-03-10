@@ -17,3 +17,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-10 13:51:32] perf(storage): refine two-phase locking protocol for serializable isolation
 - [2026-03-10 16:20:16] fix(page): refine two-phase locking protocol for serializable isolation
 - [2026-03-10 17:10:02] perf(wal): add recovery manager redo/undo pass verification tests
+- [2026-03-10 18:22:38] fix(storage): add storage format specification for table data pages
