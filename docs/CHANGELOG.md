@@ -14,3 +14,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-10 10:49:09] chore(btree): add checksum validation to log record headers
 - [2026-03-10 11:15:06] fix(buffer-pool): optimize binary search within leaf node slot array
 - [2026-03-10 13:47:39] chore(benchmarks): optimize binary search within leaf node slot array
+- [2026-03-10 13:51:32] perf(storage): refine two-phase locking protocol for serializable isolation
