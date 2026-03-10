@@ -3,6 +3,6 @@
   "maxKeysPerLeaf": 256,
   "bufferPoolFrames": 8192,
   "walFlushIntervalMs": 10,
-  "last_iteration": "v24",
-  "updated_at": "2026-03-10 15:13:05"
+  "last_iteration": "v25",
+  "updated_at": "2026-03-10 15:55:07"
 }
