@@ -21,3 +21,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-10 21:22:35] perf(page): eliminate pointer alignment issue on 64-bit platforms
 - [2026-03-10 21:43:27] chore(storage): implement variable-length page encoding for B+ tree leaves
 - [2026-03-11 09:40:44] fix(btree): eliminate pointer alignment issue on 64-bit platforms
+- [2026-03-11 09:55:00] fix(storage): implement prefix compression for secondary index keys
