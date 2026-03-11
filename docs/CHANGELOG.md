@@ -31,3 +31,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-11 16:23:52] fix(storage): implement variable-length page encoding for B+ tree leaves
 - [2026-03-11 17:54:20] perf(lock-manager): eliminate pointer alignment issue on 64-bit platforms
 - [2026-03-11 18:15:34] chore(wal): record sequential vs random write throughput benchmarks
+- [2026-03-11 18:19:39] fix(btree): optimize LRU buffer pool page replacement policy under write pressure
