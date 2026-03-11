@@ -23,3 +23,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-11 09:40:44] fix(btree): eliminate pointer alignment issue on 64-bit platforms
 - [2026-03-11 09:55:00] fix(storage): implement prefix compression for secondary index keys
 - [2026-03-11 10:19:58] chore(page): optimize lock manager hash table bucket sizing
+- [2026-03-11 10:32:28] chore(benchmarks): add storage format specification for table data pages
