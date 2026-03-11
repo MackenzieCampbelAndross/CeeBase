@@ -27,3 +27,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-11 11:37:25] chore(buffer-pool): ensure atomic fsync during write-ahead log checkpointing
 - [2026-03-11 11:47:09] fix(buffer-pool): ensure atomic fsync during write-ahead log checkpointing
 - [2026-03-11 13:27:38] fix(wal): add storage format specification for table data pages
+- [2026-03-11 14:58:32] perf(transactions): implement prefix compression for secondary index keys
