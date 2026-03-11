@@ -29,3 +29,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-11 13:27:38] fix(wal): add storage format specification for table data pages
 - [2026-03-11 14:58:32] perf(transactions): implement prefix compression for secondary index keys
 - [2026-03-11 16:23:52] fix(storage): implement variable-length page encoding for B+ tree leaves
+- [2026-03-11 17:54:20] perf(lock-manager): eliminate pointer alignment issue on 64-bit platforms
