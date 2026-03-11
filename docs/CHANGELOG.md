@@ -34,3 +34,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-11 18:19:39] fix(btree): optimize LRU buffer pool page replacement policy under write pressure
 - [2026-03-11 20:21:55] chore(transactions): optimize binary search within leaf node slot array
 - [2026-03-11 20:26:29] fix(buffer-pool): optimize binary search within leaf node slot array
+- [2026-03-11 20:50:47] fix(buffer-pool): add recovery manager redo/undo pass verification tests
