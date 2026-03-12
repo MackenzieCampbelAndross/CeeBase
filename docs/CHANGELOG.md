@@ -49,3 +49,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 18:45:14] perf(wal): add storage format specification for table data pages
 - [2026-03-12 20:05:52] perf(lock-manager): implement variable-length page encoding for B+ tree leaves
 - [2026-03-12 21:08:31] fix(wal): ensure atomic fsync during write-ahead log checkpointing
+- **2026-03-12 22:33:09**: `docs(wal): add checksum validation to log record headers`
+  *Updated specifications and documentation details.*
