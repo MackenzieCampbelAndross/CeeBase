@@ -42,3 +42,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 11:45:26] fix(benchmarks): implement variable-length page encoding for B+ tree leaves
 - [2026-03-12 12:05:33] chore(wal): ensure atomic fsync during write-ahead log checkpointing
 - [2026-03-12 13:31:16] perf(query): ensure atomic fsync during write-ahead log checkpointing
+- [2026-03-12 13:53:00] chore(lock-manager): optimize binary search within leaf node slot array
