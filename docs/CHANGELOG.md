@@ -44,3 +44,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 13:31:16] perf(query): ensure atomic fsync during write-ahead log checkpointing
 - [2026-03-12 13:53:00] chore(lock-manager): optimize binary search within leaf node slot array
 - [2026-03-12 14:26:04] chore(transactions): optimize binary search within leaf node slot array
+- [2026-03-12 15:46:58] perf(benchmarks): decouple concurrency latching from page traversal logic
