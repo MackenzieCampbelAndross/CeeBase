@@ -13,3 +13,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-03-12 14:51:43**: `docs(buffer-pool): add storage format specification for table data pages`
   *Updated specifications and documentation details.*
+- **2026-03-12 18:42:33**: `docs(btree): add recovery manager redo/undo pass verification tests`
+  *Updated specifications and documentation details.*
