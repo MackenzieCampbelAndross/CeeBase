@@ -39,3 +39,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 10:08:28] perf(transactions): add recovery manager redo/undo pass verification tests
 - [2026-03-12 10:19:47] fix(lock-manager): implement prefix compression for secondary index keys
 - [2026-03-12 10:43:08] perf(storage): optimize lock manager hash table bucket sizing
+- [2026-03-12 11:45:26] fix(benchmarks): implement variable-length page encoding for B+ tree leaves
