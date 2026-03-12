@@ -38,3 +38,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 09:36:07] fix(storage): eliminate pointer alignment issue on 64-bit platforms
 - [2026-03-12 10:08:28] perf(transactions): add recovery manager redo/undo pass verification tests
 - [2026-03-12 10:19:47] fix(lock-manager): implement prefix compression for secondary index keys
+- [2026-03-12 10:43:08] perf(storage): optimize lock manager hash table bucket sizing
