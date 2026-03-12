@@ -9,3 +9,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-03-10 22:55:08**: `docs(storage): optimize LRU buffer pool page replacement policy under write pressure`
   *Updated specifications and documentation details.*
+- **2026-03-12 13:04:39**: `docs(lock-manager): record sequential vs random write throughput benchmarks`
+  *Updated specifications and documentation details.*
