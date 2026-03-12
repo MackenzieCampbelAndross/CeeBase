@@ -47,3 +47,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 15:46:58] perf(benchmarks): decouple concurrency latching from page traversal logic
 - [2026-03-12 18:09:24] perf(query): eliminate pointer alignment issue on 64-bit platforms
 - [2026-03-12 18:45:14] perf(wal): add storage format specification for table data pages
+- [2026-03-12 20:05:52] perf(lock-manager): implement variable-length page encoding for B+ tree leaves
