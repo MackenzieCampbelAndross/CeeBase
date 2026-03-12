@@ -41,3 +41,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 10:43:08] perf(storage): optimize lock manager hash table bucket sizing
 - [2026-03-12 11:45:26] fix(benchmarks): implement variable-length page encoding for B+ tree leaves
 - [2026-03-12 12:05:33] chore(wal): ensure atomic fsync during write-ahead log checkpointing
+- [2026-03-12 13:31:16] perf(query): ensure atomic fsync during write-ahead log checkpointing
