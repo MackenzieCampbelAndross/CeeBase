@@ -52,3 +52,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-03-12 22:33:09**: `docs(wal): add checksum validation to log record headers`
   *Updated specifications and documentation details.*
 - [2026-03-13 16:35:21] chore(buffer-pool): record sequential vs random write throughput benchmarks
+- [2026-03-13 18:50:35] perf(btree): add recovery manager redo/undo pass verification tests
