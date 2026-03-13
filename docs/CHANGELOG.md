@@ -51,3 +51,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-12 21:08:31] fix(wal): ensure atomic fsync during write-ahead log checkpointing
 - **2026-03-12 22:33:09**: `docs(wal): add checksum validation to log record headers`
   *Updated specifications and documentation details.*
+- [2026-03-13 16:35:21] chore(buffer-pool): record sequential vs random write throughput benchmarks
