@@ -53,3 +53,5 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - [2026-03-13 16:35:21] chore(buffer-pool): record sequential vs random write throughput benchmarks
 - [2026-03-13 18:50:35] perf(btree): add recovery manager redo/undo pass verification tests
+- **2026-03-16 11:48:50**: `docs(buffer-pool): add vectorized filter execution for integer comparison predicates`
+  *Updated specifications and documentation details.*
