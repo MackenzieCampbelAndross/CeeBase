@@ -17,3 +17,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-03-14 12:30:26**: `docs(lock-manager): optimize lock manager hash table bucket sizing`
   *Updated specifications and documentation details.*
+- **2026-03-18 09:47:40**: `docs(page): add storage format specification for table data pages`
+  *Updated specifications and documentation details.*
