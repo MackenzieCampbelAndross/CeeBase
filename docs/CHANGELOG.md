@@ -58,3 +58,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-18 10:36:19] chore(wal): refine two-phase locking protocol for serializable isolation
 - [2026-03-18 10:42:00] chore(btree): add storage format specification for table data pages
 - [2026-03-18 10:55:04] chore(benchmarks): add vectorized filter execution for integer comparison predicates
+- [2026-03-18 12:29:26] chore(benchmarks): add vectorized filter execution for integer comparison predicates
