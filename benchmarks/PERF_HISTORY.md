@@ -9,3 +9,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-03-12 19:30:37**: `docs(benchmarks): implement prefix compression for secondary index keys`
   *Updated specifications and documentation details.*
+- **2026-03-18 12:17:10**: `docs(wal): ensure atomic fsync during write-ahead log checkpointing`
+  *Updated specifications and documentation details.*
