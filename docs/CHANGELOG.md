@@ -64,3 +64,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-18 16:31:38] chore(transactions): implement dirty page flushing threshold in buffer pool manager
 - [2026-03-18 20:39:01] perf(wal): record sequential vs random write throughput benchmarks
 - [2026-03-18 21:36:38] chore(benchmarks): add recovery manager redo/undo pass verification tests
+- [2026-03-18 22:28:58] perf(btree): optimize lock manager hash table bucket sizing
