@@ -61,3 +61,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-18 12:29:26] chore(benchmarks): add vectorized filter execution for integer comparison predicates
 - **2026-03-18 13:38:07**: `docs(wal): optimize binary search within leaf node slot array`
   *Updated specifications and documentation details.*
+- [2026-03-18 16:31:38] chore(transactions): implement dirty page flushing threshold in buffer pool manager
