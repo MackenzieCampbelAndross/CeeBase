@@ -65,3 +65,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-18 20:39:01] perf(wal): record sequential vs random write throughput benchmarks
 - [2026-03-18 21:36:38] chore(benchmarks): add recovery manager redo/undo pass verification tests
 - [2026-03-18 22:28:58] perf(btree): optimize lock manager hash table bucket sizing
+- [2026-03-19 10:04:19] fix(wal): add vectorized filter execution for integer comparison predicates
