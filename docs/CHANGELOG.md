@@ -71,3 +71,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-19 14:53:59] chore(lock-manager): add storage format specification for table data pages
 - [2026-03-19 16:44:13] chore(lock-manager): add recovery manager redo/undo pass verification tests
 - [2026-03-19 18:50:17] chore(wal): implement prefix compression for secondary index keys
+- **2026-03-19 19:14:33**: `docs(page): add recovery manager redo/undo pass verification tests`
+  *Updated specifications and documentation details.*
