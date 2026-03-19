@@ -69,3 +69,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-19 12:32:11] fix(query): decouple concurrency latching from page traversal logic
 - [2026-03-19 13:53:08] chore(buffer-pool): implement variable-length page encoding for B+ tree leaves
 - [2026-03-19 14:53:59] chore(lock-manager): add storage format specification for table data pages
+- [2026-03-19 16:44:13] chore(lock-manager): add recovery manager redo/undo pass verification tests
