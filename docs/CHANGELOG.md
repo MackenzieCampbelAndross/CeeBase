@@ -67,3 +67,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-18 22:28:58] perf(btree): optimize lock manager hash table bucket sizing
 - [2026-03-19 10:04:19] fix(wal): add vectorized filter execution for integer comparison predicates
 - [2026-03-19 12:32:11] fix(query): decouple concurrency latching from page traversal logic
+- [2026-03-19 13:53:08] chore(buffer-pool): implement variable-length page encoding for B+ tree leaves
