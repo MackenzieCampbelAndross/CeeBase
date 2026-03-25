@@ -80,3 +80,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-19 21:16:56] chore(page): implement variable-length page encoding for B+ tree leaves
 - **2026-03-23 17:05:31**: `docs(page): record sequential vs random write throughput benchmarks`
   *Updated specifications and documentation details.*
+- [2026-03-25 10:16:04] perf(lock-manager): add vectorized filter execution for integer comparison predicates
