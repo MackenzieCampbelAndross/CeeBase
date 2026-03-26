@@ -81,3 +81,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-03-23 17:05:31**: `docs(page): record sequential vs random write throughput benchmarks`
   *Updated specifications and documentation details.*
 - [2026-03-25 10:16:04] perf(lock-manager): add vectorized filter execution for integer comparison predicates
+- [2026-03-26 11:53:10] fix(lock-manager): ensure atomic fsync during write-ahead log checkpointing
