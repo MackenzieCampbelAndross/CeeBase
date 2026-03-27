@@ -82,3 +82,4 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - [2026-03-25 10:16:04] perf(lock-manager): add vectorized filter execution for integer comparison predicates
 - [2026-03-26 11:53:10] fix(lock-manager): ensure atomic fsync during write-ahead log checkpointing
+- [2026-03-27 10:47:31] chore(benchmarks): implement variable-length page encoding for B+ tree leaves
