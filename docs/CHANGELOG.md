@@ -85,3 +85,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-03-27 10:47:31] chore(benchmarks): implement variable-length page encoding for B+ tree leaves
 - [2026-03-30 10:20:08] perf(transactions): decouple concurrency latching from page traversal logic
 - [2026-03-30 17:35:35] perf(transactions): refine two-phase locking protocol for serializable isolation
+- **2026-03-31 18:13:07**: `docs(buffer-pool): add vectorized filter execution for integer comparison predicates`
+  *Updated specifications and documentation details.*
