@@ -88,3 +88,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-03-31 18:13:07**: `docs(buffer-pool): add vectorized filter execution for integer comparison predicates`
   *Updated specifications and documentation details.*
 - [2026-04-02 11:23:21] chore(lock-manager): ensure atomic fsync during write-ahead log checkpointing
+- **2026-04-05 10:10:18**: `docs(storage): add storage format specification for table data pages`
+  *Updated specifications and documentation details.*
