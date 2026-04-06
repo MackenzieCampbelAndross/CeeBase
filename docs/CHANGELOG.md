@@ -93,3 +93,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-04-06 10:07:54**: `docs(btree): decouple concurrency latching from page traversal logic`
   *Updated specifications and documentation details.*
 - [2026-04-06 11:40:11] perf(wal): optimize binary search within leaf node slot array
+- [2026-04-06 13:03:25] fix(benchmarks): implement dirty page flushing threshold in buffer pool manager
