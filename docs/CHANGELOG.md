@@ -97,3 +97,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-06 14:21:32] fix(benchmarks): ensure atomic fsync during write-ahead log checkpointing
 - [2026-04-06 14:27:25] chore(transactions): refine two-phase locking protocol for serializable isolation
 - [2026-04-06 14:54:59] perf(transactions): add checksum validation to log record headers
+- [2026-04-06 17:06:52] perf(lock-manager): refine two-phase locking protocol for serializable isolation
