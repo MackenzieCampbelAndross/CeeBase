@@ -95,3 +95,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-06 11:40:11] perf(wal): optimize binary search within leaf node slot array
 - [2026-04-06 13:03:25] fix(benchmarks): implement dirty page flushing threshold in buffer pool manager
 - [2026-04-06 14:21:32] fix(benchmarks): ensure atomic fsync during write-ahead log checkpointing
+- [2026-04-06 14:27:25] chore(transactions): refine two-phase locking protocol for serializable isolation
