@@ -104,3 +104,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - **2026-04-06 21:51:10**: `docs(query): implement variable-length page encoding for B+ tree leaves`
   *Updated specifications and documentation details.*
 - [2026-04-07 20:42:35] perf(buffer-pool): add checksum validation to log record headers
+- [2026-04-08 16:48:16] fix(transactions): ensure atomic fsync during write-ahead log checkpointing
