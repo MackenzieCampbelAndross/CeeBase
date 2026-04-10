@@ -111,3 +111,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-10 13:54:03] perf(wal): eliminate pointer alignment issue on 64-bit platforms
 - **2026-04-10 16:23:56**: `docs(page): add recovery manager redo/undo pass verification tests`
   *Updated specifications and documentation details.*
+- [2026-04-10 16:32:31] perf(btree): implement dirty page flushing threshold in buffer pool manager
