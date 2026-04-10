@@ -13,3 +13,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-08 12:08:37**: `docs(wal): add vectorized filter execution for integer comparison predicates`
   *Updated specifications and documentation details.*
+- **2026-04-10 18:11:03**: `docs(lock-manager): implement dirty page flushing threshold in buffer pool manager`
+  *Updated specifications and documentation details.*
