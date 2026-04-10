@@ -21,3 +21,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-03-20 20:02:58**: `docs(buffer-pool): add storage format specification for table data pages`
   *Updated specifications and documentation details.*
+- **2026-04-10 17:38:56**: `docs(btree): implement prefix compression for secondary index keys`
+  *Updated specifications and documentation details.*
