@@ -25,3 +25,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-04-10 18:50:23**: `docs(benchmarks): optimize lock manager hash table bucket sizing`
   *Updated specifications and documentation details.*
+- **2026-04-12 11:14:04**: `docs(buffer-pool): optimize binary search within leaf node slot array`
+  *Updated specifications and documentation details.*
