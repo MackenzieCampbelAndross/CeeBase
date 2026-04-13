@@ -116,3 +116,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-10 21:24:23] perf(wal): record sequential vs random write throughput benchmarks
 - [2026-04-13 14:56:59] chore(lock-manager): implement variable-length page encoding for B+ tree leaves
 - [2026-04-13 15:02:18] chore(query): decouple concurrency latching from page traversal logic
+- [2026-04-13 15:31:14] perf(storage): decouple concurrency latching from page traversal logic
