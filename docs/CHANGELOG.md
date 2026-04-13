@@ -114,3 +114,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-10 16:32:31] perf(btree): implement dirty page flushing threshold in buffer pool manager
 - [2026-04-10 20:18:47] fix(query): decouple concurrency latching from page traversal logic
 - [2026-04-10 21:24:23] perf(wal): record sequential vs random write throughput benchmarks
+- [2026-04-13 14:56:59] chore(lock-manager): implement variable-length page encoding for B+ tree leaves
