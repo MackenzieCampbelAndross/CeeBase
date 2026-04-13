@@ -21,3 +21,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-13 17:47:13**: `docs(wal): ensure atomic fsync during write-ahead log checkpointing`
   *Updated specifications and documentation details.*
+- **2026-04-13 18:05:07**: `docs(buffer-pool): optimize lock manager hash table bucket sizing`
+  *Updated specifications and documentation details.*
