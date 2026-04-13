@@ -121,3 +121,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-13 18:54:26] perf(storage): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-13 20:48:44] perf(wal): add recovery manager redo/undo pass verification tests
 - [2026-04-13 20:52:26] perf(page): record sequential vs random write throughput benchmarks
+- [2026-04-13 21:33:35] chore(storage): implement variable-length page encoding for B+ tree leaves
