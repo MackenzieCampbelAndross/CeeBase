@@ -120,3 +120,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-13 17:43:42] fix(wal): implement dirty page flushing threshold in buffer pool manager
 - [2026-04-13 18:54:26] perf(storage): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-13 20:48:44] perf(wal): add recovery manager redo/undo pass verification tests
+- [2026-04-13 20:52:26] perf(page): record sequential vs random write throughput benchmarks
