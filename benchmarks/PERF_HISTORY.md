@@ -17,3 +17,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-13 10:54:48**: `docs(benchmarks): optimize LRU buffer pool page replacement policy under write pressure`
   *Updated specifications and documentation details.*
+- **2026-04-13 17:01:41**: `docs(benchmarks): record sequential vs random write throughput benchmarks`
+  *Updated specifications and documentation details.*
