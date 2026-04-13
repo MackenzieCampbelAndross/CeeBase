@@ -19,3 +19,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-13 17:01:41**: `docs(benchmarks): record sequential vs random write throughput benchmarks`
   *Updated specifications and documentation details.*
+- **2026-04-13 17:47:13**: `docs(wal): ensure atomic fsync during write-ahead log checkpointing`
+  *Updated specifications and documentation details.*
