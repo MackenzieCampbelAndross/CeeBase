@@ -118,3 +118,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-13 15:02:18] chore(query): decouple concurrency latching from page traversal logic
 - [2026-04-13 15:31:14] perf(storage): decouple concurrency latching from page traversal logic
 - [2026-04-13 17:43:42] fix(wal): implement dirty page flushing threshold in buffer pool manager
+- [2026-04-13 18:54:26] perf(storage): eliminate pointer alignment issue on 64-bit platforms
