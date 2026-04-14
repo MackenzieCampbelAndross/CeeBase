@@ -125,3 +125,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 09:56:09] perf(wal): implement variable-length page encoding for B+ tree leaves
 - [2026-04-14 10:45:22] fix(query): add recovery manager redo/undo pass verification tests
 - [2026-04-14 13:04:43] chore(page): add recovery manager redo/undo pass verification tests
+- [2026-04-14 14:31:49] chore(benchmarks): eliminate pointer alignment issue on 64-bit platforms
