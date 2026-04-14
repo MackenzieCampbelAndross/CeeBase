@@ -123,3 +123,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-13 20:52:26] perf(page): record sequential vs random write throughput benchmarks
 - [2026-04-13 21:33:35] chore(storage): implement variable-length page encoding for B+ tree leaves
 - [2026-04-14 09:56:09] perf(wal): implement variable-length page encoding for B+ tree leaves
+- [2026-04-14 10:45:22] fix(query): add recovery manager redo/undo pass verification tests
