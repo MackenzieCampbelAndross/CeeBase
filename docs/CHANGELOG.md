@@ -130,3 +130,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 15:27:23] chore(wal): implement prefix compression for secondary index keys
 - [2026-04-14 16:01:59] chore(transactions): record sequential vs random write throughput benchmarks
 - [2026-04-14 16:05:11] perf(wal): record sequential vs random write throughput benchmarks
+- [2026-04-14 17:16:10] perf(page): add recovery manager redo/undo pass verification tests
