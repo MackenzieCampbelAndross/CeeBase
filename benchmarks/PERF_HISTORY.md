@@ -25,3 +25,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-13 18:42:43**: `docs(benchmarks): optimize binary search within leaf node slot array`
   *Updated specifications and documentation details.*
+- **2026-04-14 19:37:54**: `docs(buffer-pool): eliminate pointer alignment issue on 64-bit platforms`
+  *Updated specifications and documentation details.*
