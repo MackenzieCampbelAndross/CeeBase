@@ -127,3 +127,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 13:04:43] chore(page): add recovery manager redo/undo pass verification tests
 - [2026-04-14 14:31:49] chore(benchmarks): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-14 15:22:03] fix(buffer-pool): optimize LRU buffer pool page replacement policy under write pressure
+- [2026-04-14 15:27:23] chore(wal): implement prefix compression for secondary index keys
