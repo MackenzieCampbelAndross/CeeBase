@@ -133,3 +133,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 17:16:10] perf(page): add recovery manager redo/undo pass verification tests
 - [2026-04-14 18:17:47] fix(buffer-pool): implement prefix compression for secondary index keys
 - [2026-04-14 18:44:42] perf(buffer-pool): optimize lock manager hash table bucket sizing
+- [2026-04-14 22:03:25] fix(page): eliminate pointer alignment issue on 64-bit platforms
