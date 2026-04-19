@@ -135,3 +135,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 18:44:42] perf(buffer-pool): optimize lock manager hash table bucket sizing
 - [2026-04-14 22:03:25] fix(page): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-17 15:12:30] chore(benchmarks): optimize binary search within leaf node slot array
+- [2026-04-19 15:13:04] perf(wal): add vectorized filter execution for integer comparison predicates
