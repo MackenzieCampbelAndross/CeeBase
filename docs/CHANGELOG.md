@@ -136,3 +136,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-14 22:03:25] fix(page): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-17 15:12:30] chore(benchmarks): optimize binary search within leaf node slot array
 - [2026-04-19 15:13:04] perf(wal): add vectorized filter execution for integer comparison predicates
+- [2026-04-20 13:50:05] perf(btree): add recovery manager redo/undo pass verification tests
