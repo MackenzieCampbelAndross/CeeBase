@@ -137,3 +137,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-17 15:12:30] chore(benchmarks): optimize binary search within leaf node slot array
 - [2026-04-19 15:13:04] perf(wal): add vectorized filter execution for integer comparison predicates
 - [2026-04-20 13:50:05] perf(btree): add recovery manager redo/undo pass verification tests
+- **2026-04-21 11:11:01**: `docs(page): decouple concurrency latching from page traversal logic`
+  *Updated specifications and documentation details.*
