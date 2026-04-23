@@ -27,3 +27,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-04-12 11:14:04**: `docs(buffer-pool): optimize binary search within leaf node slot array`
   *Updated specifications and documentation details.*
+- **2026-04-23 10:51:19**: `docs(page): add recovery manager redo/undo pass verification tests`
+  *Updated specifications and documentation details.*
