@@ -139,3 +139,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-20 13:50:05] perf(btree): add recovery manager redo/undo pass verification tests
 - **2026-04-21 11:11:01**: `docs(page): decouple concurrency latching from page traversal logic`
   *Updated specifications and documentation details.*
+- [2026-04-24 17:48:21] perf(btree): add checksum validation to log record headers
