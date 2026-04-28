@@ -141,3 +141,4 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - [2026-04-24 17:48:21] perf(btree): add checksum validation to log record headers
 - [2026-04-27 17:40:45] perf(benchmarks): eliminate pointer alignment issue on 64-bit platforms
+- [2026-04-28 11:06:56] fix(page): implement prefix compression for secondary index keys
