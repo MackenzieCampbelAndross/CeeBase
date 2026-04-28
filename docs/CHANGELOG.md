@@ -149,3 +149,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-28 17:18:11] fix(transactions): optimize LRU buffer pool page replacement policy under write pressure
 - [2026-04-28 19:46:09] fix(buffer-pool): add vectorized filter execution for integer comparison predicates
 - [2026-04-28 21:10:54] fix(wal): optimize LRU buffer pool page replacement policy under write pressure
+- [2026-04-28 22:37:39] perf(transactions): implement dirty page flushing threshold in buffer pool manager
