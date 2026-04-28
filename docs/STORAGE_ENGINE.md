@@ -29,3 +29,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-04-23 10:51:19**: `docs(page): add recovery manager redo/undo pass verification tests`
   *Updated specifications and documentation details.*
+- **2026-04-28 20:20:26**: `docs(btree): implement dirty page flushing threshold in buffer pool manager`
+  *Updated specifications and documentation details.*
