@@ -146,3 +146,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-28 15:03:03] fix(benchmarks): implement prefix compression for secondary index keys
 - [2026-04-28 15:48:52] chore(benchmarks): optimize lock manager hash table bucket sizing
 - [2026-04-28 16:34:53] perf(query): implement prefix compression for secondary index keys
+- [2026-04-28 17:18:11] fix(transactions): optimize LRU buffer pool page replacement policy under write pressure
