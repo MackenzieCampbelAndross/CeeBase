@@ -144,3 +144,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-28 11:06:56] fix(page): implement prefix compression for secondary index keys
 - [2026-04-28 13:23:39] fix(page): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-28 15:03:03] fix(benchmarks): implement prefix compression for secondary index keys
+- [2026-04-28 15:48:52] chore(benchmarks): optimize lock manager hash table bucket sizing
