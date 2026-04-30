@@ -160,3 +160,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-30 17:35:01] perf(benchmarks): optimize binary search within leaf node slot array
 - **2026-04-30 17:43:18**: `docs(page): optimize lock manager hash table bucket sizing`
   *Updated specifications and documentation details.*
+- [2026-04-30 21:16:13] chore(wal): eliminate pointer alignment issue on 64-bit platforms
