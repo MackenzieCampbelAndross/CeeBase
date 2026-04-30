@@ -155,3 +155,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-30 11:46:48] fix(page): add recovery manager redo/undo pass verification tests
 - **2026-04-30 12:56:18**: `docs(lock-manager): refine two-phase locking protocol for serializable isolation`
   *Updated specifications and documentation details.*
+- [2026-04-30 13:11:27] perf(query): decouple concurrency latching from page traversal logic
