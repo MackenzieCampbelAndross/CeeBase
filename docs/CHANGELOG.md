@@ -162,3 +162,4 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - [2026-04-30 21:16:13] chore(wal): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-30 21:33:32] chore(lock-manager): implement prefix compression for secondary index keys
+- [2026-04-30 21:40:30] fix(benchmarks): eliminate pointer alignment issue on 64-bit platforms
