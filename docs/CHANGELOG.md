@@ -152,3 +152,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-28 22:37:39] perf(transactions): implement dirty page flushing threshold in buffer pool manager
 - [2026-04-29 15:16:22] chore(lock-manager): decouple concurrency latching from page traversal logic
 - [2026-04-30 10:40:07] chore(wal): implement prefix compression for secondary index keys
+- [2026-04-30 11:46:48] fix(page): add recovery manager redo/undo pass verification tests
