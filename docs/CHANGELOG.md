@@ -153,3 +153,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-29 15:16:22] chore(lock-manager): decouple concurrency latching from page traversal logic
 - [2026-04-30 10:40:07] chore(wal): implement prefix compression for secondary index keys
 - [2026-04-30 11:46:48] fix(page): add recovery manager redo/undo pass verification tests
+- **2026-04-30 12:56:18**: `docs(lock-manager): refine two-phase locking protocol for serializable isolation`
+  *Updated specifications and documentation details.*
