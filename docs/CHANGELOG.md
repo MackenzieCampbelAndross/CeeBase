@@ -158,3 +158,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-30 13:11:27] perf(query): decouple concurrency latching from page traversal logic
 - [2026-04-30 13:32:10] fix(wal): implement dirty page flushing threshold in buffer pool manager
 - [2026-04-30 17:35:01] perf(benchmarks): optimize binary search within leaf node slot array
+- **2026-04-30 17:43:18**: `docs(page): optimize lock manager hash table bucket sizing`
+  *Updated specifications and documentation details.*
