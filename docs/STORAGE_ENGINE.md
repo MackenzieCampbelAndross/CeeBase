@@ -31,3 +31,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-04-28 20:20:26**: `docs(btree): implement dirty page flushing threshold in buffer pool manager`
   *Updated specifications and documentation details.*
+- **2026-04-30 12:36:51**: `docs(wal): decouple concurrency latching from page traversal logic`
+  *Updated specifications and documentation details.*
