@@ -164,3 +164,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-30 21:33:32] chore(lock-manager): implement prefix compression for secondary index keys
 - [2026-04-30 21:40:30] fix(benchmarks): eliminate pointer alignment issue on 64-bit platforms
 - [2026-04-30 22:36:55] chore(buffer-pool): decouple concurrency latching from page traversal logic
+- [2026-05-07 21:42:09] perf(transactions): record sequential vs random write throughput benchmarks
