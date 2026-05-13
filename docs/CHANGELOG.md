@@ -166,3 +166,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-04-30 22:36:55] chore(buffer-pool): decouple concurrency latching from page traversal logic
 - [2026-05-07 21:42:09] perf(transactions): record sequential vs random write throughput benchmarks
 - [2026-05-13 20:42:49] fix(buffer-pool): optimize LRU buffer pool page replacement policy under write pressure
+- [2026-05-13 22:14:18] perf(benchmarks): implement variable-length page encoding for B+ tree leaves
