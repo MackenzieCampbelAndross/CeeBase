@@ -33,3 +33,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-04-30 12:36:51**: `docs(wal): decouple concurrency latching from page traversal logic`
   *Updated specifications and documentation details.*
+- **2026-05-13 22:17:09**: `docs(query): add recovery manager redo/undo pass verification tests`
+  *Updated specifications and documentation details.*
