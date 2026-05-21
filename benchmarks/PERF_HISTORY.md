@@ -31,3 +31,5 @@ Sequential vs random I/O benchmarks and latch contention profiling.
   *Updated specifications and documentation details.*
 - **2026-04-30 09:57:04**: `docs(wal): optimize binary search within leaf node slot array`
   *Updated specifications and documentation details.*
+- **2026-05-21 20:43:14**: `docs(transactions): add recovery manager redo/undo pass verification tests`
+  *Updated specifications and documentation details.*
