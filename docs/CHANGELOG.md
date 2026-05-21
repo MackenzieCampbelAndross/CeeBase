@@ -171,3 +171,5 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-05-21 18:46:45] perf(buffer-pool): record sequential vs random write throughput benchmarks
 - **2026-05-21 19:17:41**: `docs(page): implement prefix compression for secondary index keys`
   *Updated specifications and documentation details.*
+- **2026-05-21 21:55:38**: `docs(benchmarks): implement prefix compression for secondary index keys`
+  *Updated specifications and documentation details.*
