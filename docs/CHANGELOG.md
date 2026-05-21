@@ -168,3 +168,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-05-13 20:42:49] fix(buffer-pool): optimize LRU buffer pool page replacement policy under write pressure
 - [2026-05-13 22:14:18] perf(benchmarks): implement variable-length page encoding for B+ tree leaves
 - [2026-05-21 12:41:34] perf(lock-manager): eliminate pointer alignment issue on 64-bit platforms
+- [2026-05-21 18:46:45] perf(buffer-pool): record sequential vs random write throughput benchmarks
