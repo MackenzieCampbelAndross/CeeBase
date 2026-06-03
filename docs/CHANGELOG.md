@@ -173,3 +173,5 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - **2026-05-21 21:55:38**: `docs(benchmarks): implement prefix compression for secondary index keys`
   *Updated specifications and documentation details.*
+- **2026-06-03 17:49:10**: `docs(query): add storage format specification for table data pages`
+  *Updated specifications and documentation details.*
