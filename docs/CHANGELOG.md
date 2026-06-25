@@ -177,3 +177,4 @@ High-performance storage engine, indexing, and WAL transaction history.
   *Updated specifications and documentation details.*
 - [2026-06-23 18:35:10] perf(page): implement variable-length page encoding for B+ tree leaves
 - [2026-06-25 09:34:20] perf(storage): add checksum validation to log record headers
+- [2026-06-25 13:14:59] fix(storage): record sequential vs random write throughput benchmarks
