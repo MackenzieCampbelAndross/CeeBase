@@ -179,3 +179,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-06-25 09:34:20] perf(storage): add checksum validation to log record headers
 - [2026-06-25 13:14:59] fix(storage): record sequential vs random write throughput benchmarks
 - [2026-06-25 14:02:30] fix(wal): record sequential vs random write throughput benchmarks
+- [2026-06-25 17:39:17] perf(transactions): add storage format specification for table data pages
