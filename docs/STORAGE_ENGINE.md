@@ -35,3 +35,5 @@ Page layouts, slotted tuples, B+ tree concurrency, and buffer pool eviction.
   *Updated specifications and documentation details.*
 - **2026-05-13 22:17:09**: `docs(query): add recovery manager redo/undo pass verification tests`
   *Updated specifications and documentation details.*
+- **2026-06-26 10:33:23**: `docs(storage): implement variable-length page encoding for B+ tree leaves`
+  *Updated specifications and documentation details.*
