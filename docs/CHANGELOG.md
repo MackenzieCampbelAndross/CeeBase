@@ -181,3 +181,4 @@ High-performance storage engine, indexing, and WAL transaction history.
 - [2026-06-25 14:02:30] fix(wal): record sequential vs random write throughput benchmarks
 - [2026-06-25 17:39:17] perf(transactions): add storage format specification for table data pages
 - [2026-06-25 21:37:10] fix(storage): optimize LRU buffer pool page replacement policy under write pressure
+- [2026-06-26 15:35:35] perf(buffer-pool): optimize lock manager hash table bucket sizing
