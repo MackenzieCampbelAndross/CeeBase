@@ -1,12 +1,22 @@
 #include <bit>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <string>
 #include <string_view>
 #include <vector>
 
+#include "nexus/buffer/buffer_pool_manager.hpp"
+#include "nexus/catalog/catalog.hpp"
 #include "nexus/common/byte_utils.hpp"
 #include "nexus/common/config.hpp"
 #include "nexus/common/status.hpp"
 #include "nexus/common/types.hpp"
+#include "nexus/concurrency/transaction_manager.hpp"
+#include "nexus/execution/execution_engine.hpp"
+#include "nexus/recovery/log_manager.hpp"
+#include "nexus/recovery/recovery_engine.hpp"
+#include "nexus/storage/disk_manager.hpp"
 
 namespace {
 
@@ -14,15 +24,15 @@ void PrintBanner() {
     std::cout << "========================================================\n";
     std::cout << " NexusDB: Relational Database Engine\n";
     std::cout << " Version: " << nexus::NEXUS_VERSION_STRING << " (C++20)\n";
-    std::cout << " Built from first principles for performance and clarity\n";
+    std::cout << " Storage: 4 KB Slotted Pages | B+ Tree | WAL | ACID\n";
     std::cout << "========================================================\n\n";
 }
 
 void PrintUsage(std::string_view program_name) {
     std::cout << "Usage: " << program_name << " <command> [arguments]\n\n";
     std::cout << "Commands:\n";
-    std::cout << "  create <database_name>   Create a new persistent database\n";
-    std::cout << "  open <database_name>     Open an existing database and launch SQL shell\n";
+    std::cout << "  create <database_name>   Create a new persistent database file\n";
+    std::cout << "  open <database_name>     Open database and launch interactive SQL shell\n";
     std::cout << "  info                     Display engine configuration and architecture diagnostics\n";
     std::cout << "  version                  Display version information\n";
     std::cout << "  help                     Display this help message\n\n";
@@ -30,15 +40,121 @@ void PrintUsage(std::string_view program_name) {
 
 void PrintEngineInfo() {
     std::cout << "NexusDB Engine Diagnostics:\n";
-    std::cout << "  Version:            " << nexus::NEXUS_VERSION_STRING << "\n";
-    std::cout << "  Page Size:          " << nexus::PAGE_SIZE << " bytes (fixed 4 KB)\n";
-    std::cout << "  Default Pool Size:  " << nexus::DEFAULT_BUFFER_POOL_SIZE << " frames ("
+    std::cout << "  Version:              " << nexus::NEXUS_VERSION_STRING << "\n";
+    std::cout << "  Page Size:            " << nexus::PAGE_SIZE << " bytes (fixed 4 KB)\n";
+    std::cout << "  Default Pool Size:    " << nexus::DEFAULT_BUFFER_POOL_SIZE << " frames ("
               << (nexus::DEFAULT_BUFFER_POOL_SIZE * nexus::PAGE_SIZE) / 1024 << " KB)\n";
-    std::cout << "  File Magic:         0x" << std::hex << nexus::DB_FILE_MAGIC << std::dec << " (\"NXDB\")\n";
-    std::cout << "  Host Endianness:    "
+    std::cout << "  File Magic:           0x" << std::hex << nexus::DB_FILE_MAGIC << std::dec << " (\"NXDB\")\n";
+    std::cout << "  Host Endianness:      "
               << (std::endian::native == std::endian::little ? "Little-Endian" : "Big-Endian") << "\n";
-    std::cout << "  Storage Wire Format: Little-Endian (explicit canonical encoding)\n";
-    std::cout << "  Supported Types:    INTEGER (4B), BIGINT (8B), FLOAT (4B), DOUBLE (8B), BOOLEAN (1B), TEXT (Var)\n";
+    std::cout << "  Storage Wire Format:  Little-Endian (explicit canonical encoding)\n";
+    std::cout << "  Supported Data Types: INTEGER (4B), BIGINT (8B), FLOAT (4B), DOUBLE (8B), BOOLEAN (1B), TEXT (Var)\n";
+    std::cout << "  B+ Tree Indexing:     Internal & Leaf Page Splits, Merges, Range Iterators\n";
+    std::cout << "  Crash Recovery:       ARIES-style Analysis, Redo, and Undo with WAL\n";
+}
+
+int HandleCreate(std::string_view db_name) {
+    std::filesystem::path path(db_name);
+    if (path.extension() != ".nxdb") {
+        path += ".nxdb";
+    }
+
+    nexus::DiskManager dm;
+    nexus::Status s = dm.CreateDatabase(path);
+    if (!s.ok()) {
+        std::cerr << "Database creation error: " << s.ToString() << "\n";
+        return 1;
+    }
+
+    std::cout << "[SUCCESS] Database created successfully: " << path.string() << "\n";
+    std::cout << "  Total Pages:   " << dm.GetNumPages() << " (Page 0 Header initialized)\n";
+    std::cout << "  CRC-32 Valid:  0x" << std::hex << dm.GetHeader().checksum << std::dec << "\n";
+    return 0;
+}
+
+int HandleInteractiveShell(std::string_view db_name) {
+    std::filesystem::path db_path(db_name);
+    if (db_path.extension() != ".nxdb" && !std::filesystem::exists(db_path)) {
+        db_path += ".nxdb";
+    }
+
+    nexus::DiskManager dm;
+    nexus::Status s = dm.OpenDatabase(db_path);
+    if (!s.ok()) {
+        std::cerr << "Failed to open database: " << s.ToString() << "\n";
+        return 1;
+    }
+
+    std::filesystem::path wal_path = db_path;
+    wal_path.replace_extension(".wal");
+
+    nexus::BufferPoolManager bpm(nexus::DEFAULT_BUFFER_POOL_SIZE, &dm);
+    nexus::Catalog catalog(&bpm);
+    nexus::LogManager log_mgr(wal_path);
+    nexus::TransactionManager txn_mgr(&log_mgr, &bpm);
+    nexus::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
+
+    // Run crash recovery on open
+    auto rec_status = recovery.Recover();
+    if (!rec_status.ok()) {
+        std::cerr << "Warning: Recovery notice: " << rec_status.ToString() << "\n";
+    }
+
+    nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr, &recovery);
+
+    std::cout << "Connected to database: " << db_path.filename().string() << "\n";
+    std::cout << "Type SQL statements ending with ';' (or 'exit' / 'quit' to exit).\n";
+    std::cout << "Commands: SHOW TABLES; EXPLAIN <query>; BEGIN; COMMIT; ROLLBACK;\n\n";
+
+    std::string line_buffer;
+    while (true) {
+        if (line_buffer.empty()) {
+            std::cout << "nexus> ";
+        } else {
+            std::cout << "   -> ";
+        }
+
+        std::string line;
+        if (!std::getline(std::cin, line)) {
+            break;
+        }
+
+        std::string trimmed = line;
+        while (!trimmed.empty() && std::isspace(static_cast<unsigned char>(trimmed.back()))) trimmed.pop_back();
+        while (!trimmed.empty() && std::isspace(static_cast<unsigned char>(trimmed.front()))) trimmed.erase(trimmed.begin());
+
+        if (trimmed == "exit" || trimmed == "quit" || trimmed == "exit;" || trimmed == "quit;") {
+            break;
+        }
+
+        if (trimmed == "SHOW TABLES;" || trimmed == "show tables;" || trimmed == "SHOW TABLES" || trimmed == "show tables") {
+            auto tables = catalog.GetAllTables();
+            std::cout << "+----------------------+\n";
+            std::cout << "| Tables               |\n";
+            std::cout << "+----------------------+\n";
+            for (const auto* t : tables) {
+                std::cout << "| " << std::left << std::setw(20) << t->name << " |\n";
+            }
+            std::cout << "+----------------------+\n";
+            std::cout << tables.size() << " table(s) in database.\n\n";
+            line_buffer.clear();
+            continue;
+        }
+
+        line_buffer += " " + line;
+        if (line_buffer.find(';') != std::string::npos) {
+            auto result = engine.Execute(line_buffer);
+            result.Format(std::cout);
+            std::cout << "\n";
+            line_buffer.clear();
+        }
+    }
+
+    std::cout << "\nFlushing database pages and closing connection...\n";
+    (void)bpm.FlushAllPages();
+    dm.Close();
+    std::cout << "Goodbye.\n";
+    return 0;
 }
 
 } // namespace
@@ -81,12 +197,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Usage: " << args[0] << " create <database_name>\n";
             return 1;
         }
-        const std::string_view db_name = args[2];
-        PrintBanner();
-        std::cout << "[Phase 1 Core Infrastructure Active]\n";
-        std::cout << "Request to create database: '" << db_name << "'\n";
-        std::cout << "Storage subsystem (Phase 2) will create the file and 4KB page header.\n";
-        return 0;
+        return HandleCreate(args[2]);
     }
 
     if (command == "open") {
@@ -95,12 +206,8 @@ int main(int argc, char* argv[]) {
             std::cerr << "Usage: " << args[0] << " open <database_name>\n";
             return 1;
         }
-        const std::string_view db_name = args[2];
         PrintBanner();
-        std::cout << "[Phase 1 Core Infrastructure Active]\n";
-        std::cout << "Request to open database: '" << db_name << "'\n";
-        std::cout << "Buffer pool and page manager (Phases 2-3) will load the database file.\n";
-        return 0;
+        return HandleInteractiveShell(args[2]);
     }
 
     std::cerr << "Unknown command: '" << command << "'\n\n";
