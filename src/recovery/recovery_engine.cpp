@@ -1,5 +1,7 @@
 #include "nexus/recovery/recovery_engine.hpp"
 
+#include "nexus/record/slotted_page.hpp"
+
 namespace nexus {
 
 Status RecoveryEngine::Recover() {
@@ -50,7 +52,6 @@ Status RecoveryEngine::AnalysisPhase(const std::vector<LogRecord>& records) {
                 active_txns_.erase(rec.GetTxnId());
                 break;
             case LogRecordType::CHECKPOINT:
-                // Checkpoint marker
                 break;
             default:
                 break;
@@ -61,24 +62,106 @@ Status RecoveryEngine::AnalysisPhase(const std::vector<LogRecord>& records) {
 
 Status RecoveryEngine::RedoPhase(const std::vector<LogRecord>& records) {
     for (const auto& rec : records) {
-        // Redo modifications
         if (rec.GetType() == LogRecordType::INSERT) {
             auto* tbl = catalog_->GetTable(rec.GetTableName());
-            if (tbl && tbl->table_heap) {
-                // Reapply after-image to page
-                Tuple tuple(rec.GetAfterImage(), rec.GetRID());
-                (void)tbl->table_heap->UpdateTuple(tuple, rec.GetRID());
+            if (!tbl || !tbl->table_heap) continue;
+
+            // Idempotency check: inspect page LSN
+            page_id_t pid = rec.GetRID().page_id;
+            auto page_res = bpm_->FetchPage(pid);
+            if (!page_res.ok()) continue;
+
+            Page* page = *page_res;
+            if (page->GetLSN() >= rec.GetLSN()) {
+                (void)bpm_->UnpinPage(pid, false);
+                continue;
+            }
+
+            // Apply after-image
+            Tuple tuple(rec.GetAfterImage(), rec.GetRID());
+            (void)tbl->table_heap->WriteTupleAtRID(tuple, rec.GetRID());
+
+            page->SetLSN(rec.GetLSN());
+            SlottedPage(page->GetData()).SetLSN(rec.GetLSN());
+            (void)bpm_->UnpinPage(pid, true);
+
+            // Replay index insertion
+            auto indexes = catalog_->GetTableIndexes(tbl->name);
+            for (auto* idx_meta : indexes) {
+                int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                if (col_idx != -1) {
+                    Value key_val = tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                    int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                    (void)idx_meta->index->Insert(k, rec.GetRID());
+                }
             }
         } else if (rec.GetType() == LogRecordType::UPDATE) {
             auto* tbl = catalog_->GetTable(rec.GetTableName());
-            if (tbl && tbl->table_heap) {
-                Tuple tuple(rec.GetAfterImage(), rec.GetRID());
-                (void)tbl->table_heap->UpdateTuple(tuple, rec.GetRID());
+            if (!tbl || !tbl->table_heap) continue;
+
+            page_id_t pid = rec.GetRID().page_id;
+            auto page_res = bpm_->FetchPage(pid);
+            if (!page_res.ok()) continue;
+
+            Page* page = *page_res;
+            if (page->GetLSN() >= rec.GetLSN()) {
+                (void)bpm_->UnpinPage(pid, false);
+                continue;
+            }
+
+            Tuple old_tuple(rec.GetBeforeImage(), rec.GetRID());
+            Tuple new_tuple(rec.GetAfterImage(), rec.GetRID());
+            (void)tbl->table_heap->WriteTupleAtRID(new_tuple, rec.GetRID());
+
+            page->SetLSN(rec.GetLSN());
+            SlottedPage(page->GetData()).SetLSN(rec.GetLSN());
+            (void)bpm_->UnpinPage(pid, true);
+
+            // Replay index update
+            auto indexes = catalog_->GetTableIndexes(tbl->name);
+            for (auto* idx_meta : indexes) {
+                int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                if (col_idx != -1) {
+                    Value old_val = old_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                    Value new_val = new_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                    int64_t old_k = (old_val.GetType() == DataType::INTEGER) ? old_val.GetInteger() : old_val.GetBigInt();
+                    int64_t new_k = (new_val.GetType() == DataType::INTEGER) ? new_val.GetInteger() : new_val.GetBigInt();
+                    if (old_k != new_k) {
+                        (void)idx_meta->index->Remove(old_k);
+                        (void)idx_meta->index->Insert(new_k, rec.GetRID());
+                    }
+                }
             }
         } else if (rec.GetType() == LogRecordType::DELETE_REC) {
             auto* tbl = catalog_->GetTable(rec.GetTableName());
-            if (tbl && tbl->table_heap) {
-                (void)tbl->table_heap->MarkDelete(rec.GetRID());
+            if (!tbl || !tbl->table_heap) continue;
+
+            page_id_t pid = rec.GetRID().page_id;
+            auto page_res = bpm_->FetchPage(pid);
+            if (!page_res.ok()) continue;
+
+            Page* page = *page_res;
+            if (page->GetLSN() >= rec.GetLSN()) {
+                (void)bpm_->UnpinPage(pid, false);
+                continue;
+            }
+
+            (void)tbl->table_heap->MarkDelete(rec.GetRID());
+
+            page->SetLSN(rec.GetLSN());
+            SlottedPage(page->GetData()).SetLSN(rec.GetLSN());
+            (void)bpm_->UnpinPage(pid, true);
+
+            // Replay index deletion
+            Tuple old_tuple(rec.GetBeforeImage(), rec.GetRID());
+            auto indexes = catalog_->GetTableIndexes(tbl->name);
+            for (auto* idx_meta : indexes) {
+                int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                if (col_idx != -1) {
+                    Value key_val = old_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                    int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                    (void)idx_meta->index->Remove(k);
+                }
             }
         }
     }
@@ -86,29 +169,61 @@ Status RecoveryEngine::RedoPhase(const std::vector<LogRecord>& records) {
 }
 
 Status RecoveryEngine::UndoPhase(const std::vector<LogRecord>& records) {
-    // Traverse backwards to rollback active/uncommitted transactions
+    // Traverse backwards to rollback active/uncommitted (loser) transactions
     for (auto it = records.rbegin(); it != records.rend(); ++it) {
         const auto& rec = *it;
         if (active_txns_.find(rec.GetTxnId()) != active_txns_.end()) {
+            auto* tbl = catalog_->GetTable(rec.GetTableName());
+            if (!tbl || !tbl->table_heap) continue;
+
             if (rec.GetType() == LogRecordType::INSERT) {
                 // Undo insert by marking deleted
-                auto* tbl = catalog_->GetTable(rec.GetTableName());
-                if (tbl && tbl->table_heap) {
-                    (void)tbl->table_heap->MarkDelete(rec.GetRID());
+                (void)tbl->table_heap->MarkDelete(rec.GetRID());
+
+                // Remove from indexes
+                Tuple tuple(rec.GetAfterImage(), rec.GetRID());
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value key_val = tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                        (void)idx_meta->index->Remove(k);
+                    }
                 }
             } else if (rec.GetType() == LogRecordType::UPDATE) {
                 // Undo update by restoring before image
-                auto* tbl = catalog_->GetTable(rec.GetTableName());
-                if (tbl && tbl->table_heap) {
-                    Tuple before_tuple(rec.GetBeforeImage(), rec.GetRID());
-                    (void)tbl->table_heap->UpdateTuple(before_tuple, rec.GetRID());
+                Tuple before_tuple(rec.GetBeforeImage(), rec.GetRID());
+                (void)tbl->table_heap->WriteTupleAtRID(before_tuple, rec.GetRID());
+
+                Tuple after_tuple(rec.GetAfterImage(), rec.GetRID());
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value before_val = before_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        Value after_val = after_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t before_k = (before_val.GetType() == DataType::INTEGER) ? before_val.GetInteger() : before_val.GetBigInt();
+                        int64_t after_k = (after_val.GetType() == DataType::INTEGER) ? after_val.GetInteger() : after_val.GetBigInt();
+                        if (before_k != after_k) {
+                            (void)idx_meta->index->Remove(after_k);
+                            (void)idx_meta->index->Insert(before_k, rec.GetRID());
+                        }
+                    }
                 }
             } else if (rec.GetType() == LogRecordType::DELETE_REC) {
                 // Undo delete by restoring deleted tuple
-                auto* tbl = catalog_->GetTable(rec.GetTableName());
-                if (tbl && tbl->table_heap) {
-                    Tuple before_tuple(rec.GetBeforeImage(), rec.GetRID());
-                    (void)tbl->table_heap->UpdateTuple(before_tuple, rec.GetRID());
+                Tuple before_tuple(rec.GetBeforeImage(), rec.GetRID());
+                (void)tbl->table_heap->WriteTupleAtRID(before_tuple, rec.GetRID());
+
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value key_val = before_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                        (void)idx_meta->index->Insert(k, rec.GetRID());
+                    }
                 }
             }
         }

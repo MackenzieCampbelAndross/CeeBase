@@ -145,6 +145,25 @@ Status TableHeap::MarkDelete(const RID& rid) {
     return s;
 }
 
+Status TableHeap::WriteTupleAtRID(const Tuple& tuple, const RID& rid) {
+    if (!rid.IsValid()) {
+        return Status::InvalidArgument("TableHeap: Invalid RID for WriteTupleAtRID");
+    }
+
+    auto page_res = bpm_->FetchPage(rid.page_id);
+    if (!page_res.ok()) {
+        return page_res.status();
+    }
+
+    Page* page = *page_res;
+    SlottedPage slotted(page->GetData());
+    std::span<const uint8_t> tuple_span(tuple.GetData(), tuple.GetLength());
+
+    Status s = slotted.SetRecordAtSlot(rid.slot_id, tuple_span);
+    (void)bpm_->UnpinPage(rid.page_id, s.ok());
+    return s;
+}
+
 // TableIterator implementation
 TableIterator::TableIterator(TableHeap* heap, RID rid) : heap_(heap), current_rid_(rid) {
     if (current_rid_.IsValid()) {

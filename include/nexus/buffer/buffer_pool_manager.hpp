@@ -15,15 +15,19 @@
 
 namespace nexus {
 
+class LogManager;
+
 class BufferPoolManager {
 public:
-    BufferPoolManager(size_t pool_size, DiskManager* disk_manager);
+    BufferPoolManager(size_t pool_size, DiskManager* disk_manager, LogManager* log_manager = nullptr);
     ~BufferPoolManager();
 
     BufferPoolManager(const BufferPoolManager&) = delete;
     BufferPoolManager& operator=(const BufferPoolManager&) = delete;
 
     [[nodiscard]] size_t GetPoolSize() const noexcept { return pool_size_; }
+    void SetLogManager(LogManager* log_manager) noexcept { log_manager_ = log_manager; }
+    [[nodiscard]] LogManager* GetLogManager() const noexcept { return log_manager_; }
 
     // Fetch an existing page from the buffer pool or read it from disk into a frame.
     // Automatically increments the page's pin count.
@@ -53,6 +57,7 @@ private:
 
     size_t pool_size_;
     DiskManager* disk_manager_;
+    LogManager* log_manager_{nullptr};
     std::unique_ptr<LRUReplacer> replacer_;
     std::vector<Page> pages_;
     std::unordered_map<page_id_t, frame_id_t> page_table_{};

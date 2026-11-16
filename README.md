@@ -2,12 +2,12 @@
 
 [![C++20](https://img.shields.io/badge/standard-C%2B%2B20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![CMake](https://img.shields.io/badge/build-CMake%203.20%2B-orange.svg)](https://cmake.org)
-[![Tests](https://img.shields.io/badge/tests-45%2F45%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-57%2F57%20passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**NexusDB** is a lightweight, educational relational database management system implemented from first principles in modern C++20.
+**NexusDB** is a high-performance, educational relational database management system implemented from first principles in modern C++20.
 
-It implements its own persistent storage engine, fixed 4 KB slotted database pages, buffer pool manager with LRU eviction, persistent B+ Tree indexing, custom SQL lexer, recursive descent parser and AST, Volcano-iterator query execution engine, cost-based optimizer, Write-Ahead Logging (WAL), ARIES crash recovery, and interactive CLI shell.
+It implements its own persistent storage engine, fixed 4 KB slotted database pages, buffer pool manager with LRU eviction and strict WAL invariant enforcement, persistent B+ Tree indexing, custom SQL lexer, recursive descent parser and AST, Volcano-iterator query execution engine, cost-based optimizer, Write-Ahead Logging (WAL) with operating-system level durable synchronization (`FlushFileBuffers` / `fsync`), idempotent crash recovery, and interactive CLI shell.
 
 ---
 
@@ -15,13 +15,14 @@ It implements its own persistent storage engine, fixed 4 KB slotted database pag
 
 - **Zero External Engine Dependencies**: Implements disk I/O, buffer cache, B+ Tree, parser, and execution engine independently. No SQLite, PostgreSQL, or third-party engines.
 - **Strict Binary Serialization**: Canonical Little-Endian byte-level encoding with explicit bounds checking and IEEE 802.3 CRC-32 integrity checksums on every 4 KB page block.
-- **Slotted Pages & Variable-Length Records**: Slotted page layout supporting `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `BOOLEAN`, and variable-length `TEXT`/`VARCHAR` with in-place updates and automatic defragmentation.
-- **Configurable Buffer Pool**: Frame management with LRU page replacement, page pinning/unpinning, dirty page tracking, and RAII `PageGuard`.
+- **Slotted Pages & Variable-Length Records**: Slotted page layout supporting `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `BOOLEAN`, and variable-length `TEXT`/`VARCHAR` with in-place updates, arbitrary slot restoration, and automatic defragmentation.
+- **Configurable Buffer Pool**: Frame management with LRU page replacement, page pinning/unpinning, dirty page tracking, RAII `PageGuard`, and strict WAL invariant verification before dirty writes reach disk.
 - **Persistent B+ Tree Indexing**: Disk-backed B+ Tree supporting point lookups ($O(\log N)$), node splitting, merging, redistribution, leaf pointer linking, and range scans.
+- **Index Consistency**: Full synchronization across mutations—`INSERT`, `UPDATE`, and `DELETE` maintain index entries, handle primary key collision prevention, and rollback/recover cleanly.
 - **SQL Lexer & Recursive Descent Parser**: Tokenizer and recursive descent parser supporting `CREATE TABLE`, `DROP TABLE`, `CREATE INDEX`, `INSERT`, `SELECT`, `UPDATE`, `DELETE`, `EXPLAIN`, `WHERE`, `AND`/`OR`, `ORDER BY`, `LIMIT`, `INNER JOIN ... ON`, `GROUP BY`, and aggregates (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `HAVING`).
-- **Cost-Based Query Optimizer**: Access path selection, transforming sequential scans with equality filters into B+ Tree index scans, with EXPLAIN diagnostic output.
-- **ACID Transactions & Write-Ahead Logging**: Physiological WAL with log sequence numbers (LSNs), before/after images, and commit durability.
-- **ARIES-Style Crash Recovery**: 3-phase recovery algorithm (Analysis, Redo, Undo) capable of rolling back uncommitted loser transactions after a simulated crash.
+- **Cost-Based Query Optimizer & Index Acceleration**: Access path selection, transforming sequential scans with equality filters into B+ Tree index scans, with EXPLAIN diagnostic output.
+- **Physical OS Durability**: Synchronous disk synchronization via `FlushFileBuffers` on Windows and `fsync` on POSIX before commit completion.
+- **Crash Recovery & Process-Based Crash Testing**: 3-phase idempotent recovery (Analysis, Redo, Undo) thoroughly verified by a dedicated multi-process crash test harness simulating abrupt process termination across 6 failure scenarios.
 - **Interactive Command-Line Interface**: Terminal shell with ASCII table formatting, timing statistics, and database lifecycle management.
 
 ---
@@ -67,10 +68,10 @@ It implements its own persistent storage engine, fixed 4 KB slotted database pag
                                          v
                        +-----------------+-----------------+
                        |       Buffer Pool Manager         |
-                       |          (LRU Eviction)           |
+                       |   (LRU + WAL Invariant Flush)     |
                        +--------+------------------+-------+
                                 |                  |
-          Block Read / Write    |                  | WAL Append / Flush
+          Block Read / Write    |                  | WAL Append / OS Sync
                                 v                  v
                        +--------+-------+  +-------+-------+
                        |  Disk Manager  |  |  Log Manager  |
@@ -82,15 +83,30 @@ It implements its own persistent storage engine, fixed 4 KB slotted database pag
 
 ## Performance Benchmarks
 
-Measured on AMD / Intel x86_64 running Windows 11 with MSYS2 GCC 16.2.0 (`-O3` Release):
+Measured on AMD / Intel x86_64 running Windows 11 with GCC 16.2.0 (`-O3` Release) with OS-level durable WAL sync:
 
-| Benchmark Workload | Result / Throughput | Notes |
-| :--- | :--- | :--- |
-| **Sequential & Indexed Inserts** | **11,996 inserts/sec** | 500 rows, avg latency $83.3\ \mu\text{s}$/insert |
-| **B+ Tree Point Lookup** | **$33.7\ \mu\text{s}$** | $O(\log N)$ root-to-leaf traversal |
-| **Full Table Scan (500 rows)** | **$1,182.2\ \mu\text{s}$** | Slotted page block scan |
-| **Index Speedup Factor** | **$35.1\times$ faster** | Speedup over full table scan |
-| **Multi-Aggregate Query** | **$1.483\text{ ms}$** | `COUNT(*)`, `SUM(score)`, `AVG(score)` |
+### 500 Records Workload (64 Frames / 256 KB Buffer Pool)
+
+| Benchmark Workload | Throughput | Avg Latency | p50 Latency | p95 Latency |
+| :--- | :--- | :--- | :--- | :--- |
+| **Batch Sequential Insert** | **8,132 ops/s** | 118.9 μs | 117.6 μs | 174.8 μs |
+| **Point Lookup (B+ Tree)** | **31,923 ops/s** | 31.2 μs | 29.9 μs | 36.3 μs |
+| **Sequential Table Scan** | **893 ops/s** | 1,119.0 μs | 1,116.0 μs | 1,135.4 μs |
+| **Point Update (Indexed)** | **13,958 ops/s** | 66.1 μs | 60.2 μs | 85.1 μs |
+| **Point Delete (Indexed)** | **14,918 ops/s** | 62.6 μs | 48.9 μs | 139.5 μs |
+
+*B+ Tree point lookup was **35.9x faster** than full sequential table scan.*
+
+### 10,000 Records Workload (1,000 Frames / 4,000 KB Buffer Pool)
+
+| Benchmark Workload | Throughput | Avg Latency | p50 Latency | p95 Latency |
+| :--- | :--- | :--- | :--- | :--- |
+| **Point Lookup (B+ Tree)** | **13,455 ops/s** | 73.9 μs | 73.0 μs | 109.0 μs |
+| **Sequential Table Scan** | **22 ops/s** | 46,002.6 μs | 45,426.9 μs | 49,786.3 μs |
+| **Point Update (Indexed)** | **8,610 ops/s** | 113.6 μs | 104.2 μs | 156.5 μs |
+| **Point Delete (Indexed)** | **9,949 ops/s** | 97.6 μs | 92.5 μs | 135.2 μs |
+
+*B+ Tree point lookup was **622.6x faster** than full sequential table scan.*
 
 ---
 
@@ -114,96 +130,12 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNEXUS_BUILD_TESTS=ON
 # Compile everything
 cmake --build build
 
-# Execute full automated test suite (45/45 tests)
+# Execute full automated test suite (57/57 tests)
 ./build/tests/nexus_tests.exe
 
 # Execute performance benchmark suite
-./build/nexus_bench.exe
-```
-
----
-
-## Interactive CLI Walkthrough
-
-Launch the database CLI:
-
-```bash
-# 1. Create a new persistent database
-./build/nexus.exe create company.nxdb
-
-# 2. Open interactive shell
-./build/nexus.exe open company.nxdb
-```
-
-Within the shell:
-
-```sql
--- Create table with primary key index
-nexus> CREATE TABLE employees (id INT PRIMARY KEY, name TEXT, salary DOUBLE);
-Query OK, 0 row(s) affected (0.245 ms)
-
--- Multi-row insert
-nexus> INSERT INTO employees VALUES (1, 'Ada Lovelace', 120000.0), (2, 'Alan Turing', 125000.0), (3, 'Claude Shannon', 115000.0);
-Query OK, 3 row(s) affected (0.312 ms)
-
--- Query all records
-nexus> SELECT * FROM employees;
-+----+----------------+---------------+
-| id | name           | salary        |
-+----+----------------+---------------+
-| 1  | Ada Lovelace   | 120000.000000 |
-| 2  | Alan Turing    | 125000.000000 |
-| 3  | Claude Shannon | 115000.000000 |
-+----+----------------+---------------+
-3 row(s) in set (0.082 ms)
-
--- Inspect query optimizer execution plan
-nexus> EXPLAIN SELECT * FROM employees WHERE id = 1;
-=== NexusDB Query Execution Plan ===
-
-[1. Logical Query Plan]:
-  -> Filter [Predicate: (id = 1)]
-    -> SeqScan [Table: employees]
-
-[2. Physical Execution Plan]:
-  -> IndexScan [Table: employees, Index: employees_pk_idx, Key: id = 1]
-
-[3. Optimizer Diagnostics]:
-  Selected Access Path: IndexScan [Index: employees_pk_idx, Key: id = 1]
-  Index Used:           YES
-  Estimated I/O Cost:   3
-  Est. Cardinality:     1 row(s)
-
-Execution time: 0.071 ms
-
--- Aggregations
-nexus> SELECT COUNT(*), SUM(salary), AVG(salary) FROM employees;
-+----------+---------------+---------------+
-| COUNT(*) | SUM(salary)   | AVG(salary)   |
-+----------+---------------+---------------+
-| 3        | 360000.000000 | 120000.000000 |
-+----------+---------------+---------------+
-1 row(s) in set (0.104 ms)
-
--- Transactions & Rollback
-nexus> BEGIN;
-Query OK, 0 row(s) affected (0.010 ms)
-
-nexus> DELETE FROM employees WHERE id = 1;
-Query OK, 1 row(s) affected (0.048 ms)
-
-nexus> ROLLBACK;
-Query OK, 0 row(s) affected (0.025 ms)
-
-nexus> SELECT COUNT(*) FROM employees;
-+----------+
-| COUNT(*) |
-+----------+
-| 3        |
-+----------+
-1 row(s) in set (0.035 ms)
-
-nexus> exit;
+./build/nexus_bench.exe 500
+./build/nexus_bench.exe 10000
 ```
 
 ---
@@ -219,6 +151,7 @@ nexus> exit;
 - [Transaction Management](docs/transactions.md)
 - [Write-Ahead Logging & Crash Recovery](docs/recovery.md)
 - [Benchmark Methodology & Results](docs/benchmarks.md)
+- [Architectural Scope & Limitations](docs/limitations.md)
 
 ---
 

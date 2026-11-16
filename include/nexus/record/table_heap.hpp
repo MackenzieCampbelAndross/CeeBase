@@ -53,6 +53,7 @@ public:
     Result<Tuple> GetTuple(const RID& rid);
     Status UpdateTuple(const Tuple& tuple, const RID& rid);
     Status MarkDelete(const RID& rid);
+    Status WriteTupleAtRID(const Tuple& tuple, const RID& rid);
 
     // Iteration support
     [[nodiscard]] TableIterator Begin();

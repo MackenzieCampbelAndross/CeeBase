@@ -2,6 +2,7 @@
 
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <random>
 
 #include "nexus/storage/disk_manager.hpp"

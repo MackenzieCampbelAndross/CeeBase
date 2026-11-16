@@ -5,9 +5,23 @@
 #include <iostream>
 
 #include "nexus/common/byte_utils.hpp"
+#include "nexus/common/os_utils.hpp"
 #include "nexus/storage/page.hpp"
 
 namespace nexus {
+
+namespace {
+
+FILE* OpenBinaryFile(const std::filesystem::path& path, const char* mode) {
+#ifdef _WIN32
+    std::wstring wmode(mode, mode + std::strlen(mode));
+    return _wfopen(path.c_str(), wmode.c_str());
+#else
+    return std::fopen(path.c_str(), mode);
+#endif
+}
+
+} // namespace
 
 DiskManager::DiskManager() = default;
 
@@ -26,7 +40,8 @@ DiskManager::~DiskManager() {
 DiskManager::DiskManager(DiskManager&& other) noexcept {
     std::lock_guard<std::mutex> guard(other.db_io_latch_);
     file_path_ = std::move(other.file_path_);
-    db_io_ = std::move(other.db_io_);
+    db_file_ = other.db_file_;
+    other.db_file_ = nullptr;
     num_pages_ = other.num_pages_;
     header_ = other.header_;
     other.num_pages_ = 0;
@@ -37,7 +52,8 @@ DiskManager& DiskManager::operator=(DiskManager&& other) noexcept {
         std::scoped_lock lock(db_io_latch_, other.db_io_latch_);
         Close();
         file_path_ = std::move(other.file_path_);
-        db_io_ = std::move(other.db_io_);
+        db_file_ = other.db_file_;
+        other.db_file_ = nullptr;
         num_pages_ = other.num_pages_;
         header_ = other.header_;
         other.num_pages_ = 0;
@@ -47,12 +63,12 @@ DiskManager& DiskManager::operator=(DiskManager&& other) noexcept {
 
 bool DiskManager::IsOpen() const noexcept {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    return db_io_.is_open();
+    return db_file_ != nullptr;
 }
 
 Status DiskManager::CreateDatabase(const std::filesystem::path& file_path) {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (db_io_.is_open()) {
+    if (db_file_ != nullptr) {
         return Status::InvalidArgument("DiskManager: Another database file is already open");
     }
 
@@ -60,19 +76,13 @@ Status DiskManager::CreateDatabase(const std::filesystem::path& file_path) {
         return Status::AlreadyExists("DiskManager: Database file already exists: " + file_path.string());
     }
 
-    // Create file and close to ensure existence
-    {
-        std::ofstream creator(file_path, std::ios::out | std::ios::binary | std::ios::trunc);
-        if (!creator.is_open()) {
-            return Status::IoError("DiskManager: Failed to create database file: " + file_path.string());
-        }
+    FILE* fp = OpenBinaryFile(file_path, "w+b");
+    if (!fp) {
+        return Status::IoError("DiskManager: Failed to create database file: " + file_path.string());
     }
 
     file_path_ = file_path;
-    db_io_.open(file_path_, std::ios::binary | std::ios::in | std::ios::out);
-    if (!db_io_.is_open()) {
-        return Status::IoError("DiskManager: Failed to open newly created database file");
-    }
+    db_file_ = fp;
 
     // Initialize Database Header
     header_.magic = DB_FILE_MAGIC;
@@ -92,12 +102,12 @@ Status DiskManager::CreateDatabase(const std::filesystem::path& file_path) {
         return s;
     }
 
-    return Status::Ok();
+    return os::SyncFile(db_file_);
 }
 
 Status DiskManager::OpenDatabase(const std::filesystem::path& file_path) {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (db_io_.is_open()) {
+    if (db_file_ != nullptr) {
         return Status::InvalidArgument("DiskManager: Another database file is already open");
     }
 
@@ -110,12 +120,13 @@ Status DiskManager::OpenDatabase(const std::filesystem::path& file_path) {
         return Status::Corruption("DiskManager: File size is not a valid multiple of 4096-byte pages");
     }
 
-    file_path_ = file_path;
-    db_io_.open(file_path_, std::ios::binary | std::ios::in | std::ios::out);
-    if (!db_io_.is_open()) {
+    FILE* fp = OpenBinaryFile(file_path, "r+b");
+    if (!fp) {
         return Status::IoError("DiskManager: Failed to open database file: " + file_path.string());
     }
 
+    file_path_ = file_path;
+    db_file_ = fp;
     num_pages_ = static_cast<uint32_t>(file_size / PAGE_SIZE);
 
     Status s = ReadAndValidateHeaderPage();
@@ -133,9 +144,10 @@ void DiskManager::Close() {
 }
 
 void DiskManager::CloseInternal() {
-    if (db_io_.is_open()) {
-        db_io_.flush();
-        db_io_.close();
+    if (db_file_ != nullptr) {
+        (void)os::SyncFile(db_file_);
+        std::fclose(db_file_);
+        db_file_ = nullptr;
     }
     num_pages_ = 0;
     file_path_.clear();
@@ -164,21 +176,28 @@ Status DiskManager::WriteHeaderPage() {
     // Write Checksum at the end of the page (bytes 4092-4095)
     EncodeU32(checksum, page_buf.data() + (PAGE_SIZE - 4));
 
-    db_io_.seekp(0, std::ios::beg);
-    db_io_.write(reinterpret_cast<const char*>(page_buf.data()), PAGE_SIZE);
-    if (!db_io_.good()) {
+    if (os::Seek64(db_file_, 0, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to header page");
+    }
+
+    size_t written = std::fwrite(page_buf.data(), 1, PAGE_SIZE, db_file_);
+    if (written != PAGE_SIZE) {
         return Status::IoError("DiskManager: Failed to write database header page to disk");
     }
-    db_io_.flush();
+    if (std::fflush(db_file_) != 0) {
+        return Status::IoError("DiskManager: Failed to flush header page to disk");
+    }
     return Status::Ok();
 }
 
 Status DiskManager::ReadAndValidateHeaderPage() {
     std::array<uint8_t, PAGE_SIZE> page_buf{};
-    db_io_.seekg(0, std::ios::beg);
-    db_io_.read(reinterpret_cast<char*>(page_buf.data()), PAGE_SIZE);
+    if (os::Seek64(db_file_, 0, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to header page for read");
+    }
 
-    if (db_io_.gcount() != static_cast<std::streamsize>(PAGE_SIZE)) {
+    size_t read_bytes = std::fread(page_buf.data(), 1, PAGE_SIZE, db_file_);
+    if (read_bytes != PAGE_SIZE) {
         return Status::IoError("DiskManager: Failed to read 4096-byte header page");
     }
 
@@ -226,15 +245,17 @@ Status DiskManager::ReadAndValidateHeaderPage() {
 
 Status DiskManager::ReadPage(page_id_t page_id, uint8_t* page_data) {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (!db_io_.is_open()) {
+    if (db_file_ == nullptr) {
         return Status::IoError("DiskManager: No database file is open for reading");
     }
 
-    const std::streamoff offset = static_cast<std::streamoff>(page_id) * static_cast<std::streamoff>(PAGE_SIZE);
-    db_io_.seekg(offset, std::ios::beg);
-    db_io_.read(reinterpret_cast<char*>(page_data), PAGE_SIZE);
+    const int64_t offset = static_cast<int64_t>(page_id) * static_cast<int64_t>(PAGE_SIZE);
+    if (os::Seek64(db_file_, offset, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to page_id " + std::to_string(page_id));
+    }
 
-    if (db_io_.gcount() != static_cast<std::streamsize>(PAGE_SIZE)) {
+    size_t read_bytes = std::fread(page_data, 1, PAGE_SIZE, db_file_);
+    if (read_bytes != PAGE_SIZE) {
         return Status::IoError("DiskManager: Incomplete page read for page_id " + std::to_string(page_id));
     }
 
@@ -243,16 +264,22 @@ Status DiskManager::ReadPage(page_id_t page_id, uint8_t* page_data) {
 
 Status DiskManager::WritePage(page_id_t page_id, const uint8_t* page_data) {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (!db_io_.is_open()) {
+    if (db_file_ == nullptr) {
         return Status::IoError("DiskManager: No database file is open for writing");
     }
 
-    const std::streamoff offset = static_cast<std::streamoff>(page_id) * static_cast<std::streamoff>(PAGE_SIZE);
-    db_io_.seekp(offset, std::ios::beg);
-    db_io_.write(reinterpret_cast<const char*>(page_data), PAGE_SIZE);
+    const int64_t offset = static_cast<int64_t>(page_id) * static_cast<int64_t>(PAGE_SIZE);
+    if (os::Seek64(db_file_, offset, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to write page_id " + std::to_string(page_id));
+    }
 
-    if (!db_io_.good()) {
+    size_t written = std::fwrite(page_data, 1, PAGE_SIZE, db_file_);
+    if (written != PAGE_SIZE) {
         return Status::IoError("DiskManager: Failed writing page_id " + std::to_string(page_id));
+    }
+
+    if (std::fflush(db_file_) != 0) {
+        return Status::IoError("DiskManager: Failed flushing page_id " + std::to_string(page_id));
     }
 
     return Status::Ok();
@@ -260,7 +287,7 @@ Status DiskManager::WritePage(page_id_t page_id, const uint8_t* page_data) {
 
 Result<page_id_t> DiskManager::AllocatePage() {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (!db_io_.is_open()) {
+    if (db_file_ == nullptr) {
         return Status::IoError("DiskManager: Cannot allocate page; no file open");
     }
 
@@ -270,9 +297,14 @@ Result<page_id_t> DiskManager::AllocatePage() {
 
         // Read the next free page pointer stored in the free page's header (bytes 4..7)
         std::array<uint8_t, PAGE_SIZE> free_buf{};
-        const std::streamoff offset = static_cast<std::streamoff>(free_page_id) * static_cast<std::streamoff>(PAGE_SIZE);
-        db_io_.seekg(offset, std::ios::beg);
-        db_io_.read(reinterpret_cast<char*>(free_buf.data()), PAGE_SIZE);
+        const int64_t offset = static_cast<int64_t>(free_page_id) * static_cast<int64_t>(PAGE_SIZE);
+        if (os::Seek64(db_file_, offset, SEEK_SET) != 0) {
+            return Status::IoError("DiskManager: Failed seeking free page");
+        }
+        size_t read_bytes = std::fread(free_buf.data(), 1, PAGE_SIZE, db_file_);
+        if (read_bytes != PAGE_SIZE) {
+            return Status::IoError("DiskManager: Failed reading free page");
+        }
 
         page_id_t next_free_id = DecodeU32(free_buf.data() + 4);
         header_.first_free_page_id = next_free_id;
@@ -290,12 +322,16 @@ Result<page_id_t> DiskManager::AllocatePage() {
     std::array<uint8_t, PAGE_SIZE> zero_page{};
     zero_page.fill(0);
 
-    const std::streamoff offset = static_cast<std::streamoff>(new_page_id) * static_cast<std::streamoff>(PAGE_SIZE);
-    db_io_.seekp(offset, std::ios::beg);
-    db_io_.write(reinterpret_cast<const char*>(zero_page.data()), PAGE_SIZE);
-
-    if (!db_io_.good()) {
+    const int64_t offset = static_cast<int64_t>(new_page_id) * static_cast<int64_t>(PAGE_SIZE);
+    if (os::Seek64(db_file_, offset, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to append page");
+    }
+    size_t written = std::fwrite(zero_page.data(), 1, PAGE_SIZE, db_file_);
+    if (written != PAGE_SIZE) {
         return Status::IoError("DiskManager: Failed appending new page to disk");
+    }
+    if (std::fflush(db_file_) != 0) {
+        return Status::IoError("DiskManager: Failed flushing new page to disk");
     }
 
     num_pages_++;
@@ -311,7 +347,7 @@ Result<page_id_t> DiskManager::AllocatePage() {
 
 Status DiskManager::DeallocatePage(page_id_t page_id) {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (!db_io_.is_open()) {
+    if (db_file_ == nullptr) {
         return Status::IoError("DiskManager: No database file is open");
     }
 
@@ -325,12 +361,16 @@ Status DiskManager::DeallocatePage(page_id_t page_id) {
     EncodeU32(static_cast<uint32_t>(PageType::FREE_PAGE), free_buf.data());
     EncodeU32(header_.first_free_page_id, free_buf.data() + 4);
 
-    const std::streamoff offset = static_cast<std::streamoff>(page_id) * static_cast<std::streamoff>(PAGE_SIZE);
-    db_io_.seekp(offset, std::ios::beg);
-    db_io_.write(reinterpret_cast<const char*>(free_buf.data()), PAGE_SIZE);
-
-    if (!db_io_.good()) {
+    const int64_t offset = static_cast<int64_t>(page_id) * static_cast<int64_t>(PAGE_SIZE);
+    if (os::Seek64(db_file_, offset, SEEK_SET) != 0) {
+        return Status::IoError("DiskManager: Failed seeking to deallocate page");
+    }
+    size_t written = std::fwrite(free_buf.data(), 1, PAGE_SIZE, db_file_);
+    if (written != PAGE_SIZE) {
         return Status::IoError("DiskManager: Failed writing deallocated page to disk");
+    }
+    if (std::fflush(db_file_) != 0) {
+        return Status::IoError("DiskManager: Failed flushing deallocated page to disk");
     }
 
     header_.first_free_page_id = page_id;
@@ -339,8 +379,8 @@ Status DiskManager::DeallocatePage(page_id_t page_id) {
 
 Status DiskManager::Sync() {
     std::lock_guard<std::mutex> guard(db_io_latch_);
-    if (db_io_.is_open()) {
-        db_io_.flush();
+    if (db_file_ != nullptr) {
+        return os::SyncFile(db_file_);
     }
     return Status::Ok();
 }

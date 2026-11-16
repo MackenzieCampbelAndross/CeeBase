@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "nexus/record/slotted_page.hpp"
+
 namespace nexus {
 
 void QueryResult::Format(std::ostream& os) const {
@@ -188,6 +190,11 @@ QueryResult ExecutionEngine::ExecuteInsert(const InsertStatement* stmt) {
         return QueryResult{false, "Table not found: " + stmt->GetTableName(), {}, {}, 0, 0.0, ""};
     }
 
+    bool autocommit = (active_txn_ == nullptr && txn_mgr_ != nullptr);
+    if (autocommit) {
+        active_txn_ = txn_mgr_->Begin();
+    }
+
     size_t rows_inserted = 0;
     auto indexes = catalog_->GetTableIndexes(stmt->GetTableName());
 
@@ -199,9 +206,34 @@ QueryResult ExecutionEngine::ExecuteInsert(const InsertStatement* stmt) {
         }
 
         Tuple tuple(vals, tbl->schema);
+
+        // Check primary key constraint if primary key column is configured
+        if (!tbl->primary_key_column.empty()) {
+            int pk_idx = tbl->schema.GetColumnIndex(tbl->primary_key_column);
+            if (pk_idx != -1) {
+                Value pk_val = tuple.GetValue(tbl->schema, static_cast<size_t>(pk_idx));
+                int64_t pk_k = (pk_val.GetType() == DataType::INTEGER) ? pk_val.GetInteger() : pk_val.GetBigInt();
+                auto* pk_idx_meta = catalog_->GetIndex(tbl->name + "_pk_idx");
+                if (pk_idx_meta) {
+                    RID dummy_rid;
+                    if (pk_idx_meta->index->GetValue(pk_k, &dummy_rid)) {
+                        if (autocommit) {
+                            (void)txn_mgr_->Abort(active_txn_.get());
+                            active_txn_.reset();
+                        }
+                        return QueryResult{false, "Duplicate primary key value: " + std::to_string(pk_k), {}, {}, rows_inserted, 0.0, ""};
+                    }
+                }
+            }
+        }
+
         RID rid;
         auto s = tbl->table_heap->InsertTuple(tuple, &rid);
         if (!s.ok()) {
+            if (autocommit) {
+                (void)txn_mgr_->Abort(active_txn_.get());
+                active_txn_.reset();
+            }
             return QueryResult{false, s.ToString(), {}, {}, rows_inserted, 0.0, ""};
         }
 
@@ -217,12 +249,39 @@ QueryResult ExecutionEngine::ExecuteInsert(const InsertStatement* stmt) {
             }
         }
 
-        // Record in active transaction for undo if present
+        // Record in active transaction and log
         if (active_txn_) {
+            if (txn_mgr_ && txn_mgr_->GetLogManager()) {
+                LogRecord rec = LogRecord::MakeInsert(
+                    active_txn_->GetTxnId(),
+                    active_txn_->GetPrevLSN(),
+                    tbl->name,
+                    rid,
+                    tuple.GetDataVector()
+                );
+                lsn_t lsn = txn_mgr_->GetLogManager()->AppendRecord(&rec);
+                active_txn_->SetPrevLSN(lsn);
+
+                auto page_res = bpm_->FetchPage(rid.page_id);
+                if (page_res.ok()) {
+                    Page* p = *page_res;
+                    p->SetLSN(lsn);
+                    SlottedPage(p->GetData()).SetLSN(lsn);
+                    (void)bpm_->UnpinPage(rid.page_id, true);
+                }
+            }
             active_txn_->RecordInsert(tbl, rid);
         }
 
         rows_inserted++;
+    }
+
+    if (autocommit) {
+        Status s = txn_mgr_->Commit(active_txn_.get());
+        active_txn_.reset();
+        if (!s.ok()) {
+            return QueryResult{false, s.ToString(), {}, {}, rows_inserted, 0.0, ""};
+        }
     }
 
     return QueryResult{true, "", {}, {}, rows_inserted, 0.0, ""};
@@ -364,15 +423,63 @@ QueryResult ExecutionEngine::ExecuteUpdate(const UpdateStatement* stmt) {
     auto* tbl = catalog_->GetTable(stmt->GetTableName());
     if (!tbl) return QueryResult{false, "Table not found: " + stmt->GetTableName(), {}, {}, 0, 0.0, ""};
 
+    bool autocommit = (active_txn_ == nullptr && txn_mgr_ != nullptr);
+    if (autocommit) {
+        active_txn_ = txn_mgr_->Begin();
+    }
+
     size_t rows_updated = 0;
-    for (auto it = tbl->table_heap->Begin(); it != tbl->table_heap->End(); ++it) {
-        Tuple cur_tuple = *it;
-        if (stmt->GetWhereClause()) {
-            Value cond = ExpressionEvaluator::Evaluate(stmt->GetWhereClause(), &cur_tuple, &tbl->schema);
-            if (cond.IsNull() || !cond.GetBoolean()) {
-                continue;
+    auto indexes = catalog_->GetTableIndexes(stmt->GetTableName());
+    std::vector<Tuple> target_tuples;
+    bool used_index = false;
+
+    // Check if WHERE clause can be served by an index point lookup: col = <constant>
+    if (stmt->GetWhereClause() && stmt->GetWhereClause()->GetType() == ExprType::BINARY_OP) {
+        auto* bop = static_cast<const BinaryOpExpr*>(stmt->GetWhereClause());
+        if (bop->GetOp() == BinaryOp::EQUALS) {
+            const ColumnRefExpr* col_ref = nullptr;
+            const LiteralExpr* lit_ref = nullptr;
+            if (bop->GetLeft()->GetType() == ExprType::COLUMN_REF && bop->GetRight()->GetType() == ExprType::LITERAL) {
+                col_ref = static_cast<const ColumnRefExpr*>(bop->GetLeft());
+                lit_ref = static_cast<const LiteralExpr*>(bop->GetRight());
+            } else if (bop->GetRight()->GetType() == ExprType::COLUMN_REF && bop->GetLeft()->GetType() == ExprType::LITERAL) {
+                col_ref = static_cast<const ColumnRefExpr*>(bop->GetRight());
+                lit_ref = static_cast<const LiteralExpr*>(bop->GetLeft());
+            }
+            if (col_ref && lit_ref) {
+                auto* idx_meta = catalog_->GetIndexForColumn(stmt->GetTableName(), col_ref->GetColumnName());
+                if (idx_meta != nullptr) {
+                    int64_t key_val = 0;
+                    const Value& v = lit_ref->GetValue();
+                    if (v.GetType() == DataType::INTEGER) key_val = v.GetInteger();
+                    else if (v.GetType() == DataType::BIGINT) key_val = v.GetBigInt();
+                    RID match_rid;
+                    if (idx_meta->index->GetValue(key_val, &match_rid)) {
+                        auto tup_res = tbl->table_heap->GetTuple(match_rid);
+                        if (tup_res.ok()) {
+                            target_tuples.push_back(std::move(*tup_res));
+                        }
+                    }
+                    used_index = true;
+                }
             }
         }
+    }
+
+    if (!used_index) {
+        for (auto it = tbl->table_heap->Begin(); it != tbl->table_heap->End(); ++it) {
+            Tuple cur_tuple = *it;
+            if (stmt->GetWhereClause()) {
+                Value cond = ExpressionEvaluator::Evaluate(stmt->GetWhereClause(), &cur_tuple, &tbl->schema);
+                if (cond.IsNull() || !cond.GetBoolean()) {
+                    continue;
+                }
+            }
+            target_tuples.push_back(std::move(cur_tuple));
+        }
+    }
+
+    for (const auto& cur_tuple : target_tuples) {
 
         // Build updated tuple
         std::vector<Value> new_vals;
@@ -392,12 +499,92 @@ QueryResult ExecutionEngine::ExecuteUpdate(const UpdateStatement* stmt) {
         }
 
         Tuple updated_tuple(new_vals, tbl->schema);
+
+        // Check primary key collision if changed
+        if (!tbl->primary_key_column.empty()) {
+            int pk_idx = tbl->schema.GetColumnIndex(tbl->primary_key_column);
+            if (pk_idx != -1) {
+                Value old_pk_val = cur_tuple.GetValue(tbl->schema, static_cast<size_t>(pk_idx));
+                Value new_pk_val = updated_tuple.GetValue(tbl->schema, static_cast<size_t>(pk_idx));
+                int64_t old_pk = (old_pk_val.GetType() == DataType::INTEGER) ? old_pk_val.GetInteger() : old_pk_val.GetBigInt();
+                int64_t new_pk = (new_pk_val.GetType() == DataType::INTEGER) ? new_pk_val.GetInteger() : new_pk_val.GetBigInt();
+                if (old_pk != new_pk) {
+                    auto* pk_idx_meta = catalog_->GetIndex(tbl->name + "_pk_idx");
+                    if (pk_idx_meta) {
+                        RID dummy_rid;
+                        if (pk_idx_meta->index->GetValue(new_pk, &dummy_rid)) {
+                            if (autocommit) {
+                                (void)txn_mgr_->Abort(active_txn_.get());
+                                active_txn_.reset();
+                            }
+                            return QueryResult{false, "Duplicate primary key value: " + std::to_string(new_pk), {}, {}, rows_updated, 0.0, ""};
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update tuple in table heap
+        auto s = tbl->table_heap->UpdateTuple(updated_tuple, cur_tuple.GetRID());
+        if (!s.ok()) {
+            if (autocommit) {
+                (void)txn_mgr_->Abort(active_txn_.get());
+                active_txn_.reset();
+            }
+            return QueryResult{false, s.ToString(), {}, {}, rows_updated, 0.0, ""};
+        }
+
+        // Update indexes if index keys changed
+        for (auto* idx_meta : indexes) {
+            int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+            if (col_idx != -1) {
+                Value old_val = cur_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                Value new_val = updated_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                int64_t old_k = (old_val.GetType() == DataType::INTEGER) ? old_val.GetInteger() : old_val.GetBigInt();
+                int64_t new_k = (new_val.GetType() == DataType::INTEGER) ? new_val.GetInteger() : new_val.GetBigInt();
+                if (old_k != new_k) {
+                    (void)idx_meta->index->Remove(old_k);
+                    (void)idx_meta->index->Insert(new_k, cur_tuple.GetRID());
+                }
+            }
+        }
+
+        // Record in active transaction and write WAL
         if (active_txn_) {
+            if (txn_mgr_ && txn_mgr_->GetLogManager()) {
+                LogRecord rec = LogRecord::MakeUpdate(
+                    active_txn_->GetTxnId(),
+                    active_txn_->GetPrevLSN(),
+                    tbl->name,
+                    cur_tuple.GetRID(),
+                    cur_tuple.GetDataVector(),
+                    updated_tuple.GetDataVector()
+                );
+                lsn_t lsn = txn_mgr_->GetLogManager()->AppendRecord(&rec);
+                active_txn_->SetPrevLSN(lsn);
+
+                auto page_res = bpm_->FetchPage(cur_tuple.GetRID().page_id);
+                if (page_res.ok()) {
+                    Page* p = *page_res;
+                    p->SetLSN(lsn);
+                    SlottedPage(p->GetData()).SetLSN(lsn);
+                    (void)bpm_->UnpinPage(cur_tuple.GetRID().page_id, true);
+                }
+            }
             active_txn_->RecordUpdate(tbl, cur_tuple.GetRID(), cur_tuple);
         }
-        (void)tbl->table_heap->UpdateTuple(updated_tuple, cur_tuple.GetRID());
+
         rows_updated++;
     }
+
+    if (autocommit) {
+        Status s = txn_mgr_->Commit(active_txn_.get());
+        active_txn_.reset();
+        if (!s.ok()) {
+            return QueryResult{false, s.ToString(), {}, {}, rows_updated, 0.0, ""};
+        }
+    }
+
     return QueryResult{true, "", {}, {}, rows_updated, 0.0, ""};
 }
 
@@ -405,25 +592,116 @@ QueryResult ExecutionEngine::ExecuteDelete(const DeleteStatement* stmt) {
     auto* tbl = catalog_->GetTable(stmt->GetTableName());
     if (!tbl) return QueryResult{false, "Table not found: " + stmt->GetTableName(), {}, {}, 0, 0.0, ""};
 
+    bool autocommit = (active_txn_ == nullptr && txn_mgr_ != nullptr);
+    if (autocommit) {
+        active_txn_ = txn_mgr_->Begin();
+    }
+
     size_t rows_deleted = 0;
-    std::vector<RID> to_delete;
-    for (auto it = tbl->table_heap->Begin(); it != tbl->table_heap->End(); ++it) {
-        Tuple cur_tuple = *it;
-        if (stmt->GetWhereClause()) {
-            Value cond = ExpressionEvaluator::Evaluate(stmt->GetWhereClause(), &cur_tuple, &tbl->schema);
-            if (cond.IsNull() || !cond.GetBoolean()) {
-                continue;
+    auto indexes = catalog_->GetTableIndexes(stmt->GetTableName());
+    std::vector<Tuple> to_delete;
+    bool used_index = false;
+
+    // Check if WHERE clause can be served by an index point lookup: col = <constant>
+    if (stmt->GetWhereClause() && stmt->GetWhereClause()->GetType() == ExprType::BINARY_OP) {
+        auto* bop = static_cast<const BinaryOpExpr*>(stmt->GetWhereClause());
+        if (bop->GetOp() == BinaryOp::EQUALS) {
+            const ColumnRefExpr* col_ref = nullptr;
+            const LiteralExpr* lit_ref = nullptr;
+            if (bop->GetLeft()->GetType() == ExprType::COLUMN_REF && bop->GetRight()->GetType() == ExprType::LITERAL) {
+                col_ref = static_cast<const ColumnRefExpr*>(bop->GetLeft());
+                lit_ref = static_cast<const LiteralExpr*>(bop->GetRight());
+            } else if (bop->GetRight()->GetType() == ExprType::COLUMN_REF && bop->GetLeft()->GetType() == ExprType::LITERAL) {
+                col_ref = static_cast<const ColumnRefExpr*>(bop->GetRight());
+                lit_ref = static_cast<const LiteralExpr*>(bop->GetLeft());
             }
-        }
-        to_delete.push_back(cur_tuple.GetRID());
-        if (active_txn_) {
-            active_txn_->RecordDelete(tbl, cur_tuple);
+            if (col_ref && lit_ref) {
+                auto* idx_meta = catalog_->GetIndexForColumn(stmt->GetTableName(), col_ref->GetColumnName());
+                if (idx_meta != nullptr) {
+                    int64_t key_val = 0;
+                    const Value& v = lit_ref->GetValue();
+                    if (v.GetType() == DataType::INTEGER) key_val = v.GetInteger();
+                    else if (v.GetType() == DataType::BIGINT) key_val = v.GetBigInt();
+                    RID match_rid;
+                    if (idx_meta->index->GetValue(key_val, &match_rid)) {
+                        auto tup_res = tbl->table_heap->GetTuple(match_rid);
+                        if (tup_res.ok()) {
+                            to_delete.push_back(std::move(*tup_res));
+                        }
+                    }
+                    used_index = true;
+                }
+            }
         }
     }
 
-    for (const auto& rid : to_delete) {
-        (void)tbl->table_heap->MarkDelete(rid);
+    if (!used_index) {
+        for (auto it = tbl->table_heap->Begin(); it != tbl->table_heap->End(); ++it) {
+            Tuple cur_tuple = *it;
+            if (stmt->GetWhereClause()) {
+                Value cond = ExpressionEvaluator::Evaluate(stmt->GetWhereClause(), &cur_tuple, &tbl->schema);
+                if (cond.IsNull() || !cond.GetBoolean()) {
+                    continue;
+                }
+            }
+            to_delete.push_back(std::move(cur_tuple));
+        }
+    }
+
+    for (const auto& cur_tuple : to_delete) {
+        RID rid = cur_tuple.GetRID();
+        auto s = tbl->table_heap->MarkDelete(rid);
+        if (!s.ok()) {
+            if (autocommit) {
+                (void)txn_mgr_->Abort(active_txn_.get());
+                active_txn_.reset();
+            }
+            return QueryResult{false, s.ToString(), {}, {}, rows_deleted, 0.0, ""};
+        }
+
+        // Remove from indexes
+        for (auto* idx_meta : indexes) {
+            int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+            if (col_idx != -1) {
+                Value key_val = cur_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                (void)idx_meta->index->Remove(k);
+            }
+        }
+
+        // Record in active transaction and write WAL
+        if (active_txn_) {
+            if (txn_mgr_ && txn_mgr_->GetLogManager()) {
+                LogRecord rec = LogRecord::MakeDelete(
+                    active_txn_->GetTxnId(),
+                    active_txn_->GetPrevLSN(),
+                    tbl->name,
+                    rid,
+                    cur_tuple.GetDataVector()
+                );
+                lsn_t lsn = txn_mgr_->GetLogManager()->AppendRecord(&rec);
+                active_txn_->SetPrevLSN(lsn);
+
+                auto page_res = bpm_->FetchPage(rid.page_id);
+                if (page_res.ok()) {
+                    Page* p = *page_res;
+                    p->SetLSN(lsn);
+                    SlottedPage(p->GetData()).SetLSN(lsn);
+                    (void)bpm_->UnpinPage(rid.page_id, true);
+                }
+            }
+            active_txn_->RecordDelete(tbl, rid, cur_tuple);
+        }
+
         rows_deleted++;
+    }
+
+    if (autocommit) {
+        Status s = txn_mgr_->Commit(active_txn_.get());
+        active_txn_.reset();
+        if (!s.ok()) {
+            return QueryResult{false, s.ToString(), {}, {}, rows_deleted, 0.0, ""};
+        }
     }
 
     return QueryResult{true, "", {}, {}, rows_deleted, 0.0, ""};

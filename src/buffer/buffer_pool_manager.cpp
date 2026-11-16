@@ -1,10 +1,14 @@
 #include "nexus/buffer/buffer_pool_manager.hpp"
 
+#include "nexus/common/byte_utils.hpp"
+#include "nexus/recovery/log_manager.hpp"
+
 namespace nexus {
 
-BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager* disk_manager)
+BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager* disk_manager, LogManager* log_manager)
     : pool_size_(pool_size),
       disk_manager_(disk_manager),
+      log_manager_(log_manager),
       replacer_(std::make_unique<LRUReplacer>(pool_size)),
       pages_(pool_size) {
     for (size_t i = 0; i < pool_size_; ++i) {
@@ -26,7 +30,17 @@ bool BufferPoolManager::FindAvailableFrame(frame_id_t* frame_id) {
     if (replacer_->Victim(frame_id)) {
         Page& victim = pages_[*frame_id];
         if (victim.IsDirty()) {
-            (void)disk_manager_->WritePage(victim.GetPageId(), victim.GetData());
+            // Enforce Write-Ahead Logging invariant: Page LSN <= Persisted LSN before dirty write
+            if (log_manager_ != nullptr && victim.GetLSN() > log_manager_->GetPersistedLSN()) {
+                Status log_sync = log_manager_->Flush();
+                if (!log_sync.ok()) {
+                    return false;
+                }
+            }
+            Status write_status = disk_manager_->WritePage(victim.GetPageId(), victim.GetData());
+            if (!write_status.ok()) {
+                return false;
+            }
             victim.SetDirty(false);
         }
         page_table_.erase(victim.GetPageId());
@@ -66,6 +80,8 @@ Result<Page*> BufferPoolManager::FetchPage(page_id_t page_id) {
     page.page_id_ = page_id;
     page.pin_count_ = 1;
     page.is_dirty_ = false;
+    // Extract LSN from page bytes if present
+    page.SetLSN(DecodeU64(page.GetData() + 8));
 
     page_table_[page_id] = frame_id;
     replacer_->Pin(frame_id);
@@ -102,7 +118,6 @@ Status BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
 
 Status BufferPoolManager::FlushPage(page_id_t page_id) {
     std::lock_guard<std::mutex> guard(latch_);
-
     auto it = page_table_.find(page_id);
     if (it == page_table_.end()) {
         return Status::NotFound("BufferPoolManager: Page not found for flush");
@@ -111,21 +126,34 @@ Status BufferPoolManager::FlushPage(page_id_t page_id) {
     frame_id_t frame_id = it->second;
     Page& page = pages_[frame_id];
     if (page.IsDirty()) {
+        // Enforce Write-Ahead Logging invariant
+        if (log_manager_ != nullptr && page.GetLSN() > log_manager_->GetPersistedLSN()) {
+            Status log_sync = log_manager_->Flush();
+            if (!log_sync.ok()) {
+                return log_sync;
+            }
+        }
         Status s = disk_manager_->WritePage(page.GetPageId(), page.GetData());
         if (!s.ok()) {
             return s;
         }
         page.SetDirty(false);
     }
-
     return Status::Ok();
 }
 
 Status BufferPoolManager::FlushAllPages() {
     std::lock_guard<std::mutex> guard(latch_);
-    for (auto const& [page_id, frame_id] : page_table_) {
+    for (auto& [page_id, frame_id] : page_table_) {
         Page& page = pages_[frame_id];
         if (page.IsDirty()) {
+            // Enforce Write-Ahead Logging invariant
+            if (log_manager_ != nullptr && page.GetLSN() > log_manager_->GetPersistedLSN()) {
+                Status log_sync = log_manager_->Flush();
+                if (!log_sync.ok()) {
+                    return log_sync;
+                }
+            }
             Status s = disk_manager_->WritePage(page.GetPageId(), page.GetData());
             if (!s.ok()) {
                 return s;
@@ -139,13 +167,11 @@ Status BufferPoolManager::FlushAllPages() {
 Result<Page*> BufferPoolManager::NewPage(page_id_t* page_id) {
     std::lock_guard<std::mutex> guard(latch_);
 
-    // 1. Locate an available frame first
     frame_id_t frame_id{INVALID_FRAME_ID};
     if (!FindAvailableFrame(&frame_id)) {
-        return Status::BufferPoolExhausted("All buffer pool frames are currently pinned");
+        return Status::BufferPoolExhausted("Buffer pool exhausted: cannot allocate new page");
     }
 
-    // 2. Allocate page on disk
     auto alloc_res = disk_manager_->AllocatePage();
     if (!alloc_res.ok()) {
         free_list_.push_back(frame_id);
@@ -153,13 +179,11 @@ Result<Page*> BufferPoolManager::NewPage(page_id_t* page_id) {
     }
 
     *page_id = *alloc_res;
-
-    // 3. Prepare frame
     Page& page = pages_[frame_id];
     page.ResetMemory();
     page.page_id_ = *page_id;
     page.pin_count_ = 1;
-    page.is_dirty_ = true; // New page must be written back on eviction
+    page.is_dirty_ = true;
 
     page_table_[*page_id] = frame_id;
     replacer_->Pin(frame_id);
@@ -178,8 +202,8 @@ Status BufferPoolManager::DeletePage(page_id_t page_id) {
             return Status::InvalidArgument("BufferPoolManager: Cannot delete pinned page " + std::to_string(page_id));
         }
 
+        replacer_->Pin(frame_id);
         page_table_.erase(it);
-        replacer_->Pin(frame_id); // Remove from replacer
         page.ResetMemory();
         free_list_.push_back(frame_id);
     }

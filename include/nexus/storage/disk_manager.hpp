@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <mutex>
 #include <string>
 
@@ -66,7 +66,7 @@ private:
     void CloseInternal();
 
     std::filesystem::path file_path_{};
-    std::fstream db_io_{};
+    FILE* db_file_{nullptr};
     uint32_t num_pages_{0};
     DatabaseHeader header_{};
     mutable std::mutex db_io_latch_{};

@@ -27,7 +27,7 @@ Status TransactionManager::Commit(Transaction* txn) {
     if (log_manager_) {
         LogRecord commit_record(txn->GetTxnId(), txn->GetPrevLSN(), LogRecordType::COMMIT);
         (void)log_manager_->AppendRecord(&commit_record);
-        // WAL protocol: Commit record MUST be durably flushed before commit completes
+        // WAL protocol: Commit record MUST be durably flushed to physical disk before commit completes
         Status s = log_manager_->Flush();
         if (!s.ok()) {
             return s;
@@ -44,35 +44,75 @@ Status TransactionManager::Abort(Transaction* txn) {
         return Status::InvalidArgument("TransactionManager: Invalid transaction state for abort");
     }
 
-    // Rollback inserts (delete inserted tuples)
+    // Rollback inserts (delete inserted tuples and remove from indexes)
     const auto& inserts = txn->GetInsertRecords();
     for (auto it = inserts.rbegin(); it != inserts.rend(); ++it) {
         auto* tbl = it->first;
         RID rid = it->second;
         if (tbl && tbl->table_heap) {
+            auto tup_res = tbl->table_heap->GetTuple(rid);
+            if (tup_res.ok() && catalog_) {
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value key_val = tup_res->GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                        (void)idx_meta->index->Remove(k);
+                    }
+                }
+            }
             (void)tbl->table_heap->MarkDelete(rid);
         }
     }
 
-    // Rollback updates (restore before-image tuples)
+    // Rollback updates (restore before-image tuples and fix indexes)
     const auto& updates = txn->GetUpdateRecords();
     for (auto it = updates.rbegin(); it != updates.rend(); ++it) {
         auto* tbl = std::get<0>(*it);
         RID rid = std::get<1>(*it);
         const Tuple& before_image = std::get<2>(*it);
         if (tbl && tbl->table_heap) {
+            auto cur_res = tbl->table_heap->GetTuple(rid);
+            if (cur_res.ok() && catalog_) {
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value cur_val = cur_res->GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        Value old_val = before_image.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t cur_k = (cur_val.GetType() == DataType::INTEGER) ? cur_val.GetInteger() : cur_val.GetBigInt();
+                        int64_t old_k = (old_val.GetType() == DataType::INTEGER) ? old_val.GetInteger() : old_val.GetBigInt();
+                        if (cur_k != old_k) {
+                            (void)idx_meta->index->Remove(cur_k);
+                            (void)idx_meta->index->Insert(old_k, rid);
+                        }
+                    }
+                }
+            }
             (void)tbl->table_heap->UpdateTuple(before_image, rid);
         }
     }
 
-    // Rollback deletes (re-insert deleted tuples)
+    // Rollback deletes (restore deleted tuples and reinsert into indexes)
     const auto& deletes = txn->GetDeleteRecords();
     for (auto it = deletes.rbegin(); it != deletes.rend(); ++it) {
-        auto* tbl = it->first;
-        const Tuple& deleted_tuple = it->second;
+        auto* tbl = std::get<0>(*it);
+        RID rid = std::get<1>(*it);
+        const Tuple& deleted_tuple = std::get<2>(*it);
         if (tbl && tbl->table_heap) {
-            RID reinserted_rid;
-            (void)tbl->table_heap->InsertTuple(deleted_tuple, &reinserted_rid);
+            (void)tbl->table_heap->WriteTupleAtRID(deleted_tuple, rid);
+            if (catalog_) {
+                auto indexes = catalog_->GetTableIndexes(tbl->name);
+                for (auto* idx_meta : indexes) {
+                    int col_idx = tbl->schema.GetColumnIndex(idx_meta->key_column_name);
+                    if (col_idx != -1) {
+                        Value key_val = deleted_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
+                        int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
+                        (void)idx_meta->index->Insert(k, rid);
+                    }
+                }
+            }
         }
     }
 

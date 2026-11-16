@@ -15,6 +15,13 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wno-unused-parameter)
 endif()
 
+# Sanitizers option
+option(NEXUS_ENABLE_SANITIZERS "Enable Address and Undefined Behavior Sanitizers" OFF)
+if(NEXUS_ENABLE_SANITIZERS AND NOT MSVC)
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 # Core NexusDB Engine Library
 add_library(nexus_core
     src/common/status.cpp

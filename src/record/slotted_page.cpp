@@ -231,6 +231,54 @@ Status SlottedPage::DeleteRecord(slot_id_t slot_id) {
     return Status::Ok();
 }
 
+Status SlottedPage::SetRecordAtSlot(slot_id_t target_slot, std::span<const uint8_t> record) {
+    if (record.empty()) {
+        return Status::InvalidArgument("SlottedPage: Empty record");
+    }
+    if (record.size() > MAX_USABLE_SPACE) {
+        return Status::InvalidArgument("SlottedPage: Record size exceeds page capacity");
+    }
+
+    const uint16_t record_len = static_cast<uint16_t>(record.size());
+    uint16_t slot_count = GetSlotCount();
+
+    if (target_slot < slot_count) {
+        Slot old_slot = GetSlot(target_slot);
+        if (!old_slot.IsEmpty()) {
+            return UpdateRecord(target_slot, record);
+        }
+    }
+
+    size_t needed_space = record_len;
+    if (target_slot >= slot_count) {
+        needed_space += (static_cast<size_t>(target_slot) + 1 - slot_count) * sizeof(Slot);
+    }
+
+    if (GetFreeSpaceRemaining() < needed_space) {
+        Defragment();
+        if (GetFreeSpaceRemaining() < needed_space) {
+            return Status::OutOfRange("SlottedPage: Insufficient free space for SetRecordAtSlot");
+        }
+    }
+
+    uint16_t free_ptr = GetFreeSpacePointer();
+    free_ptr = static_cast<uint16_t>(free_ptr - record_len);
+    SetFreeSpacePointer(free_ptr);
+
+    std::memcpy(data_ + free_ptr, record.data(), record_len);
+
+    if (target_slot >= slot_count) {
+        for (slot_id_t i = slot_count; i < target_slot; ++i) {
+            SetSlot(i, Slot{0, 0});
+        }
+        SetSlotCount(target_slot + 1);
+    }
+
+    SetSlot(target_slot, Slot{free_ptr, record_len});
+    UpdateChecksum();
+    return Status::Ok();
+}
+
 void SlottedPage::Defragment() {
     std::array<uint8_t, PAGE_SIZE> temp{};
     std::memcpy(temp.data(), data_, HEADER_SIZE);

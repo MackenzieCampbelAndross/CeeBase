@@ -22,6 +22,7 @@ public:
 
     [[nodiscard]] const uint8_t* GetData() const noexcept { return data_.data(); }
     [[nodiscard]] size_t GetLength() const noexcept { return data_.size(); }
+    [[nodiscard]] const std::vector<uint8_t>& GetDataVector() const noexcept { return data_; }
     [[nodiscard]] RID GetRID() const noexcept { return rid_; }
     void SetRID(const RID& rid) noexcept { rid_ = rid; }
 

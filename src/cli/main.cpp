@@ -88,10 +88,10 @@ int HandleInteractiveShell(std::string_view db_name) {
     std::filesystem::path wal_path = db_path;
     wal_path.replace_extension(".wal");
 
-    nexus::BufferPoolManager bpm(nexus::DEFAULT_BUFFER_POOL_SIZE, &dm);
-    nexus::Catalog catalog(&bpm);
     nexus::LogManager log_mgr(wal_path);
-    nexus::TransactionManager txn_mgr(&log_mgr, &bpm);
+    nexus::BufferPoolManager bpm(nexus::DEFAULT_BUFFER_POOL_SIZE, &dm, &log_mgr);
+    nexus::Catalog catalog(&bpm);
+    nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
     nexus::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
 
     // Run crash recovery on open

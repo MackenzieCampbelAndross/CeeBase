@@ -49,8 +49,12 @@ public:
         update_records_.emplace_back(tbl, rid, std::move(before_image));
     }
 
+    void RecordDelete(TableMetadata* tbl, RID rid, Tuple deleted_tuple) {
+        delete_records_.emplace_back(tbl, rid, std::move(deleted_tuple));
+    }
+
     void RecordDelete(TableMetadata* tbl, Tuple deleted_tuple) {
-        delete_records_.emplace_back(tbl, std::move(deleted_tuple));
+        delete_records_.emplace_back(tbl, deleted_tuple.GetRID(), std::move(deleted_tuple));
     }
 
     [[nodiscard]] const std::vector<std::pair<TableMetadata*, RID>>& GetInsertRecords() const noexcept {
@@ -61,7 +65,7 @@ public:
         return update_records_;
     }
 
-    [[nodiscard]] const std::vector<std::pair<TableMetadata*, Tuple>>& GetDeleteRecords() const noexcept {
+    [[nodiscard]] const std::vector<std::tuple<TableMetadata*, RID, Tuple>>& GetDeleteRecords() const noexcept {
         return delete_records_;
     }
 
@@ -72,7 +76,7 @@ private:
 
     std::vector<std::pair<TableMetadata*, RID>> insert_records_{};
     std::vector<std::tuple<TableMetadata*, RID, Tuple>> update_records_{};
-    std::vector<std::pair<TableMetadata*, Tuple>> delete_records_{};
+    std::vector<std::tuple<TableMetadata*, RID, Tuple>> delete_records_{};
 };
 
 } // namespace nexus

@@ -31,6 +31,31 @@ jobs:
       - name: Run Tests
         run: ctest --test-dir build --output-on-failure
 
+  sanitizers-linux:
+    name: Linux Sanitizers (ASan & UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++-12
+
+      - name: Configure CMake with Sanitizers
+        run: |
+          cmake -B build-san -G Ninja \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DNEXUS_ENABLE_SANITIZERS=ON \
+            -DNEXUS_BUILD_TESTS=ON
+
+      - name: Build with Sanitizers
+        run: cmake --build build-san
+
+      - name: Run Tests with Sanitizers
+        run: ctest --test-dir build-san --output-on-failure
+
   build-and-test-windows:
     name: Windows MSVC Build & Test
     runs-on: windows-latest

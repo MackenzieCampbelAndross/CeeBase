@@ -59,6 +59,7 @@ public:
     Result<std::vector<uint8_t>> GetRecord(slot_id_t slot_id) const;
     Status UpdateRecord(slot_id_t slot_id, std::span<const uint8_t> new_record);
     Status DeleteRecord(slot_id_t slot_id);
+    Status SetRecordAtSlot(slot_id_t slot_id, std::span<const uint8_t> record);
 
     // Defragment page records, eliminating gaps left by deleted or resized tuples
     void Defragment();

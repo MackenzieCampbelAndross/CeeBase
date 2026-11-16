@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
+#include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <mutex>
 #include <vector>
 
@@ -37,7 +37,7 @@ public:
 
 private:
     std::filesystem::path wal_path_;
-    std::fstream wal_file_{};
+    FILE* wal_file_{nullptr};
     std::vector<uint8_t> buffer_{};
     std::atomic<lsn_t> next_lsn_{1};
     std::atomic<lsn_t> persisted_lsn_{0};
