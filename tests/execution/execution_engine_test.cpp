@@ -2,17 +2,17 @@
 
 #include <filesystem>
 
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class ExecutionEngineTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_exec_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_exec_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "exec.nxdb";
         std::filesystem::remove(db_path_);
@@ -110,4 +110,4 @@ TEST_F(ExecutionEngineTest, OptimizerIndexSelectionAndExplain) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

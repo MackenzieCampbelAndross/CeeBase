@@ -2,7 +2,7 @@
 
 ## Overview
 
-**NexusDB** implements a complete SQL compilation pipeline from first principles, free of third-party parsing tools (such as Flex, Bison, ANTLR, or SQLite's lemon).
+**CeeBase** implements a complete SQL compilation pipeline from first principles, free of third-party parsing tools (such as Flex, Bison, ANTLR, or SQLite's lemon).
 
 ```
 SQL Query String
@@ -22,7 +22,7 @@ Physical Execution Plan
 
 ---
 
-## 1. SQL Lexer (`nexus::Lexer`)
+## 1. SQL Lexer (`ceebase::Lexer`)
 
 The lexer scans raw input strings and produces a linear token vector. It handles line and column tracking for syntax error diagnostics.
 
@@ -45,7 +45,7 @@ The lexer scans raw input strings and produces a linear token vector. It handles
 
 ---
 
-## 2. SQL Parser & Abstract Syntax Tree (`nexus::Parser`)
+## 2. SQL Parser & Abstract Syntax Tree (`ceebase::Parser`)
 
 The parser is implemented as a deterministic recursive descent parser using Pratt precedence climbing for arithmetic and logical expressions.
 

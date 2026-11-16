@@ -1,8 +1,8 @@
-#include "nexus/recovery/recovery_engine.hpp"
+#include "ceebase/recovery/recovery_engine.hpp"
 
-#include "nexus/record/slotted_page.hpp"
+#include "ceebase/record/slotted_page.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 Status RecoveryEngine::Recover() {
     auto records_res = log_manager_->ReadAllRecords();
@@ -240,4 +240,4 @@ Status RecoveryEngine::UndoPhase(const std::vector<LogRecord>& records) {
     return Status::Ok();
 }
 
-} // namespace nexus
+} // namespace ceebase

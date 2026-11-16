@@ -2,7 +2,7 @@
 
 ## Overview
 
-**NexusDB** guarantees the **Atomicity** and **Durability** properties of ACID through Write-Ahead Logging (WAL) and an idempotent crash recovery engine.
+**CeeBase** guarantees the **Atomicity** and **Durability** properties of ACID through Write-Ahead Logging (WAL) and an idempotent crash recovery engine.
 
 ---
 
@@ -40,7 +40,7 @@ Every log record is canonically encoded in Little-Endian byte order:
 
 ---
 
-## 3. Crash Recovery Engine (`nexus::RecoveryEngine`)
+## 3. Crash Recovery Engine (`ceebase::RecoveryEngine`)
 
 Upon database startup after an abnormal process termination or system crash, the recovery engine runs a three-phase recovery protocol:
 
@@ -96,4 +96,4 @@ Upon database startup after an abnormal process termination or system crash, the
   - Synchronization of all B+ Tree indexes during both Redo and Undo.
 - **Architectural Scope**:
   - Single-writer architecture with serialized checkpointing.
-  - Non-ARIES features omitted: NexusDB uses physiological undo without Compensation Log Records (CLRs). A crash during Undo requires restarting recovery from the checkpoint, which is safe and idempotent.
+  - Non-ARIES features omitted: CeeBase uses physiological undo without Compensation Log Records (CLRs). A crash during Undo requires restarting recovery from the checkpoint, which is safe and idempotent.

@@ -1,4 +1,4 @@
-# NexusDB Storage Engine Specification
+# CeeBase Storage Engine Specification
 
 ## 1. Subsystem Scope
 
@@ -10,7 +10,7 @@ where $\text{PAGE\_SIZE} = 4096\text{ bytes}$.
 
 ## 2. File Layout & Header Page (Page 0)
 
-Every NexusDB database file consists of contiguous 4096-byte pages.
+Every CeeBase database file consists of contiguous 4096-byte pages.
 Page 0 is reserved as the **Database Header Page**:
 
 | Byte Offset | Field Name | Data Type | Description |

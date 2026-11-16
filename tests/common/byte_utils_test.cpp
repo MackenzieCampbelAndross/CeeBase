@@ -3,9 +3,9 @@
 #include <array>
 #include <vector>
 
-#include "nexus/common/byte_utils.hpp"
+#include "ceebase/common/byte_utils.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(ByteUtilsTest, LowLevelEndianRoundTrip) {
@@ -58,7 +58,7 @@ TEST(ByteUtilsTest, WriterAndReaderSequentialFlow) {
     EXPECT_TRUE(writer.WriteI64(-1000000000LL).ok());
     EXPECT_TRUE(writer.WriteFloat(1.5f).ok());
     EXPECT_TRUE(writer.WriteDouble(99.999).ok());
-    EXPECT_TRUE(writer.WriteString("Hello NexusDB!").ok());
+    EXPECT_TRUE(writer.WriteString("Hello CeeBase!").ok());
 
     const size_t written = writer.BytesWritten();
     EXPECT_GT(written, 0);
@@ -99,7 +99,7 @@ TEST(ByteUtilsTest, WriterAndReaderSequentialFlow) {
 
     auto str_val = reader.ReadString();
     ASSERT_TRUE(str_val.ok());
-    EXPECT_EQ(*str_val, "Hello NexusDB!");
+    EXPECT_EQ(*str_val, "Hello CeeBase!");
 
     EXPECT_EQ(reader.Remaining(), 0);
 }
@@ -155,4 +155,4 @@ TEST(ByteUtilsTest, CRC32StandardVector) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

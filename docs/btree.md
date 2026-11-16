@@ -2,7 +2,7 @@
 
 ## Overview
 
-**NexusDB** implements a fully persistent, page-backed B+ Tree index designed for high-performance primary and secondary key lookups, range scans, and ordered iteration.
+**CeeBase** implements a fully persistent, page-backed B+ Tree index designed for high-performance primary and secondary key lookups, range scans, and ordered iteration.
 
 The B+ Tree is integrated directly with the Buffer Pool Manager: all nodes (internal and leaf) are allocated as fixed 4096-byte database pages (`BTREE_INTERNAL = 0x0004` and `BTREE_LEAF = 0x0005`).
 

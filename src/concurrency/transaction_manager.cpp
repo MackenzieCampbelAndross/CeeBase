@@ -1,8 +1,8 @@
-#include "nexus/concurrency/transaction_manager.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
 
-#include "nexus/catalog/catalog.hpp"
+#include "ceebase/catalog/catalog.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 std::unique_ptr<Transaction> TransactionManager::Begin() {
     std::lock_guard<std::mutex> guard(latch_);
@@ -141,4 +141,4 @@ Status TransactionManager::Checkpoint() {
     return Status::Ok();
 }
 
-} // namespace nexus
+} // namespace ceebase

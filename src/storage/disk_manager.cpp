@@ -1,14 +1,14 @@
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
 #include <array>
 #include <cstring>
 #include <iostream>
 
-#include "nexus/common/byte_utils.hpp"
-#include "nexus/common/os_utils.hpp"
-#include "nexus/storage/page.hpp"
+#include "ceebase/common/byte_utils.hpp"
+#include "ceebase/common/os_utils.hpp"
+#include "ceebase/storage/page.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 namespace {
 
@@ -86,8 +86,8 @@ Status DiskManager::CreateDatabase(const std::filesystem::path& file_path) {
 
     // Initialize Database Header
     header_.magic = DB_FILE_MAGIC;
-    header_.version_major = NEXUS_VERSION_MAJOR;
-    header_.version_minor = NEXUS_VERSION_MINOR;
+    header_.version_major = CEEBASE_VERSION_MAJOR;
+    header_.version_minor = CEEBASE_VERSION_MINOR;
     header_.page_size = static_cast<uint32_t>(PAGE_SIZE);
     header_.total_pages = 1;
     header_.first_free_page_id = INVALID_PAGE_ID;
@@ -223,7 +223,7 @@ Status DiskManager::ReadAndValidateHeaderPage() {
         return Status::Corruption("DiskManager: Corrupted header page data layout");
     }
 
-    if (*magic != DB_FILE_MAGIC) {
+    if (*magic != DB_FILE_MAGIC && *magic != LEGACY_DB_FILE_MAGIC) {
         return Status::Corruption("DiskManager: Invalid database file magic identifier");
     }
 
@@ -385,4 +385,4 @@ Status DiskManager::Sync() {
     return Status::Ok();
 }
 
-} // namespace nexus
+} // namespace ceebase

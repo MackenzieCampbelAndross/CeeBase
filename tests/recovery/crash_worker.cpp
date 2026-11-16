@@ -3,12 +3,12 @@
 #include <iostream>
 #include <string>
 
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/recovery/recovery_engine.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/recovery/recovery_engine.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -42,13 +42,13 @@ int main(int argc, char** argv) {
 
     if (scenario == 1) {
         // Scenario 1: Crash before WAL persistence
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
-        nexus::BufferPoolManager bpm(10, &dm);
-        nexus::Catalog catalog(&bpm);
-        nexus::LogManager log_mgr(wal_path);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::BufferPoolManager bpm(10, &dm);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::LogManager log_mgr(wal_path);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, balance DOUBLE);");
         (void)engine.Execute("BEGIN;");
@@ -59,14 +59,14 @@ int main(int argc, char** argv) {
         AbruptCrash(42);
     } else if (scenario == 2) {
         // Scenario 2: Crash after WAL persistence but before data page persistence
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
-        nexus::BufferPoolManager bpm(10, &dm);
-        nexus::Catalog catalog(&bpm);
-        nexus::LogManager log_mgr(wal_path);
+        ceebase::BufferPoolManager bpm(10, &dm);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::LogManager log_mgr(wal_path);
         bpm.SetLogManager(&log_mgr);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, balance DOUBLE);");
         (void)engine.Execute("BEGIN;");
@@ -78,14 +78,14 @@ int main(int argc, char** argv) {
         AbruptCrash(42);
     } else if (scenario == 3) {
         // Scenario 3: Crash during active transaction (uncommitted)
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
-        nexus::BufferPoolManager bpm(10, &dm);
-        nexus::Catalog catalog(&bpm);
-        nexus::LogManager log_mgr(wal_path);
+        ceebase::BufferPoolManager bpm(10, &dm);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::LogManager log_mgr(wal_path);
         bpm.SetLogManager(&log_mgr);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, balance DOUBLE);");
         // Txn 1: Committed
@@ -102,14 +102,14 @@ int main(int argc, char** argv) {
         AbruptCrash(42);
     } else if (scenario == 4) {
         // Scenario 4: Crash immediately after commit durability
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
-        nexus::BufferPoolManager bpm(10, &dm);
-        nexus::Catalog catalog(&bpm);
-        nexus::LogManager log_mgr(wal_path);
+        ceebase::BufferPoolManager bpm(10, &dm);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::LogManager log_mgr(wal_path);
         bpm.SetLogManager(&log_mgr);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, balance DOUBLE);");
         (void)engine.Execute("BEGIN;");
@@ -128,22 +128,22 @@ int main(int argc, char** argv) {
         AbruptCrash(42);
     } else if (scenario == 5) {
         // Scenario 5: Crash during recovery itself
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
-        nexus::BufferPoolManager bpm(10, &dm);
-        nexus::Catalog catalog(&bpm);
-        nexus::LogManager log_mgr(wal_path);
+        ceebase::BufferPoolManager bpm(10, &dm);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::LogManager log_mgr(wal_path);
         bpm.SetLogManager(&log_mgr);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, balance DOUBLE);");
         (void)engine.Execute("BEGIN;");
         (void)engine.Execute("INSERT INTO ledger VALUES (1, 100.0);");
         (void)engine.Execute("COMMIT;");
 
-        nexus::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
-        recovery.SetCrashPoint(nexus::CrashPoint::DURING_REDO);
+        ceebase::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
+        recovery.SetCrashPoint(ceebase::CrashPoint::DURING_REDO);
         auto rec_status = recovery.Recover();
         if (!rec_status.ok()) {
             // Simulated crash

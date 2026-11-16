@@ -5,12 +5,12 @@
 #include <iostream>
 #include <string>
 
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/recovery/recovery_engine.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/recovery/recovery_engine.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
 #ifdef _WIN32
 #include <process.h>
@@ -18,19 +18,19 @@
 #include <sys/wait.h>
 #endif
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 std::filesystem::path FindCrashWorkerExecutable() {
     std::vector<std::filesystem::path> candidates = {
-        "tests/nexus_crash_worker.exe",
-        "nexus_crash_worker.exe",
-        "./nexus_crash_worker.exe",
-        "tests/nexus_crash_worker",
-        "nexus_crash_worker",
-        "./nexus_crash_worker",
-        "build/tests/nexus_crash_worker.exe",
-        "build/tests/nexus_crash_worker"
+        "tests/ceebase_crash_worker.exe",
+        "ceebase_crash_worker.exe",
+        "./ceebase_crash_worker.exe",
+        "tests/ceebase_crash_worker",
+        "ceebase_crash_worker",
+        "./ceebase_crash_worker",
+        "build/tests/ceebase_crash_worker.exe",
+        "build/tests/ceebase_crash_worker"
     };
 
     for (const auto& p : candidates) {
@@ -65,7 +65,7 @@ int RunCrashWorker(const std::filesystem::path& worker_exe,
 class CrashRecoveryProcessTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_process_crash_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_process_crash_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "crash_test.nxdb";
         wal_path_ = test_dir_ / "crash_test.wal";
@@ -86,7 +86,7 @@ protected:
 
 // Scenario 1: Crash before WAL persistence (uncommitted and unpersisted)
 TEST_F(CrashRecoveryProcessTest, Scenario1_CrashBeforeWalPersistence) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 1);
     EXPECT_EQ(exit_code, 42);
 
@@ -122,7 +122,7 @@ TEST_F(CrashRecoveryProcessTest, Scenario1_CrashBeforeWalPersistence) {
 
 // Scenario 2: Crash after WAL persistence but before data page persistence
 TEST_F(CrashRecoveryProcessTest, Scenario2_CrashAfterWalBeforeDataPageFlush) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 2);
     EXPECT_EQ(exit_code, 42);
 
@@ -161,7 +161,7 @@ TEST_F(CrashRecoveryProcessTest, Scenario2_CrashAfterWalBeforeDataPageFlush) {
 
 // Scenario 3: Crash during active transaction (uncommitted transaction rollback)
 TEST_F(CrashRecoveryProcessTest, Scenario3_CrashDuringActiveTransaction) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 3);
     EXPECT_EQ(exit_code, 42);
 
@@ -201,7 +201,7 @@ TEST_F(CrashRecoveryProcessTest, Scenario3_CrashDuringActiveTransaction) {
 
 // Scenario 4: Crash immediately after commit durability
 TEST_F(CrashRecoveryProcessTest, Scenario4_CrashImmediatelyAfterCommitDurability) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 4);
     EXPECT_EQ(exit_code, 42);
 
@@ -236,7 +236,7 @@ TEST_F(CrashRecoveryProcessTest, Scenario4_CrashImmediatelyAfterCommitDurability
 
 // Scenario 5: Crash during recovery itself
 TEST_F(CrashRecoveryProcessTest, Scenario5_CrashDuringRecovery) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 5);
     EXPECT_EQ(exit_code, 42);
 
@@ -269,7 +269,7 @@ TEST_F(CrashRecoveryProcessTest, Scenario5_CrashDuringRecovery) {
 
 // Scenario 6: Repeated recovery attempts on the same state (idempotence)
 TEST_F(CrashRecoveryProcessTest, Scenario6_RepeatedRecoveryIdempotence) {
-    ASSERT_FALSE(worker_exe_.empty()) << "nexus_crash_worker binary not found";
+    ASSERT_FALSE(worker_exe_.empty()) << "ceebase_crash_worker binary not found";
     int exit_code = RunCrashWorker(worker_exe_, db_path_, 4);
     EXPECT_EQ(exit_code, 42);
 
@@ -317,4 +317,4 @@ TEST_F(CrashRecoveryProcessTest, Scenario6_RepeatedRecoveryIdempotence) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

@@ -6,24 +6,24 @@
 #include <string_view>
 #include <vector>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/common/byte_utils.hpp"
-#include "nexus/common/config.hpp"
-#include "nexus/common/status.hpp"
-#include "nexus/common/types.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/recovery/recovery_engine.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/common/byte_utils.hpp"
+#include "ceebase/common/config.hpp"
+#include "ceebase/common/status.hpp"
+#include "ceebase/common/types.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/recovery/recovery_engine.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
 namespace {
 
 void PrintBanner() {
     std::cout << "========================================================\n";
-    std::cout << " NexusDB: Relational Database Engine\n";
-    std::cout << " Version: " << nexus::NEXUS_VERSION_STRING << " (C++20)\n";
+    std::cout << " CeeBase: Relational Database Engine\n";
+    std::cout << " Version: " << ceebase::CEEBASE_VERSION_STRING << " (C++20)\n";
     std::cout << " Storage: 4 KB Slotted Pages | B+ Tree | WAL | ACID\n";
     std::cout << "========================================================\n\n";
 }
@@ -39,12 +39,12 @@ void PrintUsage(std::string_view program_name) {
 }
 
 void PrintEngineInfo() {
-    std::cout << "NexusDB Engine Diagnostics:\n";
-    std::cout << "  Version:              " << nexus::NEXUS_VERSION_STRING << "\n";
-    std::cout << "  Page Size:            " << nexus::PAGE_SIZE << " bytes (fixed 4 KB)\n";
-    std::cout << "  Default Pool Size:    " << nexus::DEFAULT_BUFFER_POOL_SIZE << " frames ("
-              << (nexus::DEFAULT_BUFFER_POOL_SIZE * nexus::PAGE_SIZE) / 1024 << " KB)\n";
-    std::cout << "  File Magic:           0x" << std::hex << nexus::DB_FILE_MAGIC << std::dec << " (\"NXDB\")\n";
+    std::cout << "CeeBase Engine Diagnostics:\n";
+    std::cout << "  Version:              " << ceebase::CEEBASE_VERSION_STRING << "\n";
+    std::cout << "  Page Size:            " << ceebase::PAGE_SIZE << " bytes (fixed 4 KB)\n";
+    std::cout << "  Default Pool Size:    " << ceebase::DEFAULT_BUFFER_POOL_SIZE << " frames ("
+              << (ceebase::DEFAULT_BUFFER_POOL_SIZE * ceebase::PAGE_SIZE) / 1024 << " KB)\n";
+    std::cout << "  File Magic:           0x" << std::hex << ceebase::DB_FILE_MAGIC << std::dec << " (\"CBDB\")\n";
     std::cout << "  Host Endianness:      "
               << (std::endian::native == std::endian::little ? "Little-Endian" : "Big-Endian") << "\n";
     std::cout << "  Storage Wire Format:  Little-Endian (explicit canonical encoding)\n";
@@ -55,12 +55,12 @@ void PrintEngineInfo() {
 
 int HandleCreate(std::string_view db_name) {
     std::filesystem::path path(db_name);
-    if (path.extension() != ".nxdb") {
-        path += ".nxdb";
+    if (path.extension() != ".cbdb" && path.extension() != ".nxdb") {
+        path += ".cbdb";
     }
 
-    nexus::DiskManager dm;
-    nexus::Status s = dm.CreateDatabase(path);
+    ceebase::DiskManager dm;
+    ceebase::Status s = dm.CreateDatabase(path);
     if (!s.ok()) {
         std::cerr << "Database creation error: " << s.ToString() << "\n";
         return 1;
@@ -74,12 +74,18 @@ int HandleCreate(std::string_view db_name) {
 
 int HandleInteractiveShell(std::string_view db_name) {
     std::filesystem::path db_path(db_name);
-    if (db_path.extension() != ".nxdb" && !std::filesystem::exists(db_path)) {
-        db_path += ".nxdb";
+    if (!std::filesystem::exists(db_path)) {
+        if (std::filesystem::exists(std::string(db_name) + ".cbdb")) {
+            db_path = std::string(db_name) + ".cbdb";
+        } else if (std::filesystem::exists(std::string(db_name) + ".nxdb")) {
+            db_path = std::string(db_name) + ".nxdb";
+        } else if (db_path.extension() != ".cbdb" && db_path.extension() != ".nxdb") {
+            db_path += ".cbdb";
+        }
     }
 
-    nexus::DiskManager dm;
-    nexus::Status s = dm.OpenDatabase(db_path);
+    ceebase::DiskManager dm;
+    ceebase::Status s = dm.OpenDatabase(db_path);
     if (!s.ok()) {
         std::cerr << "Failed to open database: " << s.ToString() << "\n";
         return 1;
@@ -88,11 +94,11 @@ int HandleInteractiveShell(std::string_view db_name) {
     std::filesystem::path wal_path = db_path;
     wal_path.replace_extension(".wal");
 
-    nexus::LogManager log_mgr(wal_path);
-    nexus::BufferPoolManager bpm(nexus::DEFAULT_BUFFER_POOL_SIZE, &dm, &log_mgr);
-    nexus::Catalog catalog(&bpm);
-    nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-    nexus::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
+    ceebase::LogManager log_mgr(wal_path);
+    ceebase::BufferPoolManager bpm(ceebase::DEFAULT_BUFFER_POOL_SIZE, &dm, &log_mgr);
+    ceebase::Catalog catalog(&bpm);
+    ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+    ceebase::RecoveryEngine recovery(&log_mgr, &bpm, &catalog);
 
     // Run crash recovery on open
     auto rec_status = recovery.Recover();
@@ -100,7 +106,7 @@ int HandleInteractiveShell(std::string_view db_name) {
         std::cerr << "Warning: Recovery notice: " << rec_status.ToString() << "\n";
     }
 
-    nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr, &recovery);
+    ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr, &recovery);
 
     std::cout << "Connected to database: " << db_path.filename().string() << "\n";
     std::cout << "Type SQL statements ending with ';' (or 'exit' / 'quit' to exit).\n";
@@ -109,7 +115,7 @@ int HandleInteractiveShell(std::string_view db_name) {
     std::string line_buffer;
     while (true) {
         if (line_buffer.empty()) {
-            std::cout << "nexus> ";
+            std::cout << "ceebase> ";
         } else {
             std::cout << "   -> ";
         }
@@ -175,7 +181,7 @@ int main(int argc, char* argv[]) {
     const std::string_view command = args[1];
 
     if (command == "version" || command == "--version" || command == "-v") {
-        std::cout << "NexusDB version " << nexus::NEXUS_VERSION_STRING << "\n";
+        std::cout << "CeeBase version " << ceebase::CEEBASE_VERSION_STRING << "\n";
         return 0;
     }
 

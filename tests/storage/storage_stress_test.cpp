@@ -5,18 +5,18 @@
 #include <random>
 #include <vector>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
-#include "nexus/record/schema.hpp"
-#include "nexus/record/table_heap.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
+#include "ceebase/record/schema.hpp"
+#include "ceebase/record/table_heap.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class StorageStressTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_stress_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_stress_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "stress.nxdb";
         std::filesystem::remove(db_path_);
@@ -124,4 +124,4 @@ TEST_F(StorageStressTest, RandomizedCRUDAndProcessRestart) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

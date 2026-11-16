@@ -15,7 +15,7 @@ SortIncludes: CaseSensitive
 IncludeCategories:
   - Regex: '^<.*>'
     Priority: 1
-  - Regex: '^"nexus/.*"'
+  - Regex: '^"ceebase/.*"'
     Priority: 2
   - Regex: '.*'
     Priority: 3

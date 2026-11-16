@@ -1,9 +1,9 @@
-#include "nexus/common/byte_utils.hpp"
+#include "ceebase/common/byte_utils.hpp"
 
 #include <array>
 #include <cstring>
 
-namespace nexus {
+namespace ceebase {
 
 namespace {
 
@@ -226,4 +226,4 @@ uint32_t ComputeCRC32(std::span<const uint8_t> data, uint32_t initial) noexcept 
     return ~crc;
 }
 
-} // namespace nexus
+} // namespace ceebase

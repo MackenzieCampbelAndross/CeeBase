@@ -3,9 +3,9 @@
 #include <array>
 #include <string>
 
-#include "nexus/record/slotted_page.hpp"
+#include "ceebase/record/slotted_page.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(SlottedPageTest, InitAndBasicInsertGet) {
@@ -17,7 +17,7 @@ TEST(SlottedPageTest, InitAndBasicInsertGet) {
     EXPECT_EQ(page.GetSlotCount(), 0);
     EXPECT_TRUE(page.VerifyChecksum());
 
-    std::string rec1 = "First Record in NexusDB";
+    std::string rec1 = "First Record in CeeBase";
     std::span<const uint8_t> span1(reinterpret_cast<const uint8_t*>(rec1.data()), rec1.size());
 
     auto slot1 = page.InsertRecord(span1);
@@ -104,4 +104,4 @@ TEST(SlottedPageTest, Defragmentation) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

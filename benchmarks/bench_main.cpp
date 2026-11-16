@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/common/config.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/common/config.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
 namespace {
 
@@ -68,7 +68,7 @@ void RunBenchmarkScale(size_t scale) {
     std::cout << " BENCHMARK WORKLOAD SCALE: " << scale << " RECORDS\n";
     std::cout << "===============================================================================\n";
 
-    auto bench_dir = std::filesystem::temp_directory_path() / ("nexus_bench_" + std::to_string(scale));
+    auto bench_dir = std::filesystem::temp_directory_path() / ("ceebase_bench_" + std::to_string(scale));
     std::filesystem::create_directories(bench_dir);
     auto db_path = bench_dir / "bench.nxdb";
     auto wal_path = bench_dir / "bench.wal";
@@ -76,21 +76,21 @@ void RunBenchmarkScale(size_t scale) {
     std::filesystem::remove(wal_path);
 
     {
-        nexus::DiskManager dm;
+        ceebase::DiskManager dm;
         (void)dm.CreateDatabase(db_path);
 
         size_t pool_size = std::max<size_t>(64, scale / 10);
-        nexus::LogManager log_mgr(wal_path);
-        nexus::BufferPoolManager bpm(pool_size, &dm, &log_mgr);
-        nexus::Catalog catalog(&bpm);
-        nexus::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
-        nexus::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
+        ceebase::LogManager log_mgr(wal_path);
+        ceebase::BufferPoolManager bpm(pool_size, &dm, &log_mgr);
+        ceebase::Catalog catalog(&bpm);
+        ceebase::TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
+        ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
         (void)engine.Execute("CREATE TABLE bench (id INTEGER PRIMARY KEY, score DOUBLE, note TEXT);");
 
         std::cout << "  Configuration:\n";
-        std::cout << "    Page Size:       " << nexus::PAGE_SIZE << " bytes\n";
-        std::cout << "    Buffer Pool:     " << pool_size << " frames (" << (pool_size * nexus::PAGE_SIZE) / 1024 << " KB)\n";
+        std::cout << "    Page Size:       " << ceebase::PAGE_SIZE << " bytes\n";
+        std::cout << "    Buffer Pool:     " << pool_size << " frames (" << (pool_size * ceebase::PAGE_SIZE) / 1024 << " KB)\n";
         std::cout << "    Durability:      OS Synchronized WAL (FlushFileBuffers/fsync)\n\n";
 
         std::cout << "  " << std::left << std::setw(28) << "Operation"
@@ -214,7 +214,7 @@ void RunBenchmarkScale(size_t scale) {
 
 int main(int argc, char** argv) {
     std::cout << "===============================================================================\n";
-    std::cout << " NEXUS DB: RELATIONAL DATABASE PERFORMANCE & BENCHMARK SUITE\n";
+    std::cout << " CeeBase: RELATIONAL DATABASE PERFORMANCE & BENCHMARK SUITE\n";
     std::cout << " Implementation: First-principles C++20 | 4KB Slotted Pages | B+ Tree | WAL\n";
     std::cout << " Compiler: GCC " << __VERSION__ << " | Host Architecture: Little-Endian\n";
     std::cout << "===============================================================================\n";

@@ -2,10 +2,10 @@
 
 #include <unordered_set>
 
-#include "nexus/common/config.hpp"
-#include "nexus/common/types.hpp"
+#include "ceebase/common/config.hpp"
+#include "ceebase/common/types.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(TypesTest, CompileTimeConstants) {
@@ -72,4 +72,4 @@ TEST(DataTypeTest, FixedSizes) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

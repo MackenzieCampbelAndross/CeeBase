@@ -1,6 +1,6 @@
-#include "nexus/parser/ast.hpp"
+#include "ceebase/parser/ast.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 std::string_view BinaryOpToString(BinaryOp op) noexcept {
     switch (op) {
@@ -49,4 +49,4 @@ std::string AggregateExpr::ToString() const {
     return s;
 }
 
-} // namespace nexus
+} // namespace ceebase

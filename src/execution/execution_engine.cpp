@@ -1,12 +1,12 @@
-#include "nexus/execution/execution_engine.hpp"
+#include "ceebase/execution/execution_engine.hpp"
 
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
-#include "nexus/record/slotted_page.hpp"
+#include "ceebase/record/slotted_page.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 void QueryResult::Format(std::ostream& os) const {
     if (!success) {
@@ -713,7 +713,7 @@ QueryResult ExecutionEngine::ExecuteExplain(const ExplainStatement* stmt) {
     }
 
     std::ostringstream ss;
-    ss << "=== NexusDB Query Execution Plan ===\n\n";
+    ss << "=== CeeBase Query Execution Plan ===\n\n";
 
     if (stmt->GetStatement()->GetType() == StatementType::SELECT) {
         auto* sel = static_cast<const SelectStatement*>(stmt->GetStatement());
@@ -743,4 +743,4 @@ QueryResult ExecutionEngine::ExecuteExplain(const ExplainStatement* stmt) {
     return QueryResult{true, "", {}, {}, 0, 0.0, ss.str()};
 }
 
-} // namespace nexus
+} // namespace ceebase

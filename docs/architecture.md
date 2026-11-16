@@ -1,12 +1,12 @@
-# NexusDB Architectural Specification
+# CeeBase Architectural Specification
 
 ## 1. System Overview
 
-NexusDB is an educational, production-grade relational database management system designed and built from first principles in C++20. It enforces rigorous subsystem isolation, deterministic byte-level disk serialization, zero external database engine dependencies, and zero third-party parser dependencies.
+CeeBase is an educational, production-grade relational database management system designed and built from first principles in C++20. It enforces rigorous subsystem isolation, deterministic byte-level disk serialization, zero external database engine dependencies, and zero third-party parser dependencies.
 
 ## 2. Layered Architecture
 
-NexusDB is architected into cleanly decoupled vertical layers:
+CeeBase is architected into cleanly decoupled vertical layers:
 
 ```
 +-------------------------------------------------------+

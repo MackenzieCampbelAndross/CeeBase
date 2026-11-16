@@ -1,8 +1,8 @@
-# NexusDB Benchmark Methodology & Performance Results
+# CeeBase Benchmark Methodology & Performance Results
 
 ## Overview
 
-The `nexus_bench` suite provides reproducible, transparent performance measurements across varying workload scales (500 and 10,000 records), reporting throughput, average latency, p50 latency, and p95 latency.
+The `ceebase_bench` suite provides reproducible, transparent performance measurements across varying workload scales (500 and 10,000 records), reporting throughput, average latency, p50 latency, and p95 latency.
 
 ---
 
@@ -53,11 +53,11 @@ Compile and execute the benchmark binary:
 ```bash
 # Build release binaries
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target nexus_bench
+cmake --build build --target ceebase_bench
 
 # Run scale 500
-./build/nexus_bench.exe 500
+./build/ceebase_bench.exe 500
 
 # Run scale 10,000
-./build/nexus_bench.exe 10000
+./build/ceebase_bench.exe 10000
 ```

@@ -1,6 +1,6 @@
-#include "nexus/planner/planner.hpp"
+#include "ceebase/planner/planner.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 Status Planner::ValidateStatement(const Statement* stmt) {
     if (!stmt) return Status::InvalidArgument("Null statement");
@@ -181,4 +181,4 @@ Result<std::unique_ptr<LogicalPlanNode>> Planner::PlanSelect(const SelectStateme
     return plan;
 }
 
-} // namespace nexus
+} // namespace ceebase

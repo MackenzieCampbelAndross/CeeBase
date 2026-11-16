@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "nexus/parser/ast.hpp"
-#include "nexus/parser/lexer.hpp"
-#include "nexus/parser/parser.hpp"
+#include "ceebase/parser/ast.hpp"
+#include "ceebase/parser/lexer.hpp"
+#include "ceebase/parser/parser.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(SqlParserTest, LexerTokenization) {
@@ -88,4 +88,4 @@ TEST(SqlParserTest, ParseInvalidSyntaxErrorHandling) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

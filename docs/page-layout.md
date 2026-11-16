@@ -1,8 +1,8 @@
-# NexusDB Page Layout Specification
+# CeeBase Page Layout Specification
 
 ## 1. Page Header (General Layout)
 
-Every data page in NexusDB has a standard header formatted using explicit Little-Endian binary encoding:
+Every data page in CeeBase has a standard header formatted using explicit Little-Endian binary encoding:
 
 | Offset (Bytes) | Field | Type | Description |
 |:---|:---|:---|:---|

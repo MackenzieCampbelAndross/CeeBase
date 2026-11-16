@@ -1,9 +1,9 @@
-#include "nexus/buffer/buffer_pool_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
 
-#include "nexus/common/byte_utils.hpp"
-#include "nexus/recovery/log_manager.hpp"
+#include "ceebase/common/byte_utils.hpp"
+#include "ceebase/recovery/log_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager* disk_manager, LogManager* log_manager)
     : pool_size_(pool_size),
@@ -221,4 +221,4 @@ bool BufferPoolManager::IsPageInPool(page_id_t page_id) const {
     return page_table_.find(page_id) != page_table_.end();
 }
 
-} // namespace nexus
+} // namespace ceebase

@@ -1,11 +1,11 @@
-# NexusDB Architectural Limitations & Engineering Scope
+# CeeBase Architectural Limitations & Engineering Scope
 
-This document provides transparent technical disclosure regarding the architectural design boundaries, trade-offs, and current engineering scope of **NexusDB v1.0**.
+This document provides transparent technical disclosure regarding the architectural design boundaries, trade-offs, and current engineering scope of **CeeBase v1.0**.
 
 ---
 
 ## 1. Concurrency Control Model
-- **Single-Writer Serialization**: NexusDB uses a single-writer architecture coordinated via mutex synchronization in `TransactionManager`, `DiskManager`, and `BufferPoolManager`.
+- **Single-Writer Serialization**: CeeBase uses a single-writer architecture coordinated via mutex synchronization in `TransactionManager`, `DiskManager`, and `BufferPoolManager`.
 - **Planned Evolution**: Future versions will implement Strict Two-Phase Locking (SS2PL) or Multi-Version Concurrency Control (MVCC) with fine-grained page and tuple latches.
 
 ---

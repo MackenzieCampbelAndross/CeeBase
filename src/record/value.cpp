@@ -1,8 +1,8 @@
-#include "nexus/record/value.hpp"
+#include "ceebase/record/value.hpp"
 
 #include <stdexcept>
 
-namespace nexus {
+namespace ceebase {
 
 int32_t Value::GetInteger() const {
     if (is_null_ || type_ != DataType::INTEGER) {
@@ -92,4 +92,4 @@ bool Value::operator<(const Value& other) const {
     return val_ < other.val_;
 }
 
-} // namespace nexus
+} // namespace ceebase

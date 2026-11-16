@@ -5,15 +5,15 @@
 #include <fstream>
 #include <random>
 
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class DiskManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_disk_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_disk_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "test_store.nxdb";
         std::filesystem::remove(db_path_);
@@ -114,4 +114,4 @@ TEST_F(DiskManagerTest, PageDeallocationAndReuse) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

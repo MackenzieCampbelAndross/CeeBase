@@ -1,10 +1,10 @@
-#include "nexus/parser/lexer.hpp"
+#include "ceebase/parser/lexer.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <unordered_map>
 
-namespace nexus {
+namespace ceebase {
 
 std::string_view TokenTypeToString(TokenType type) noexcept {
     switch (type) {
@@ -311,4 +311,4 @@ Token Lexer::ScanString() {
     return Token{TokenType::STRING_LITERAL, str, start_line, start_col};
 }
 
-} // namespace nexus
+} // namespace ceebase

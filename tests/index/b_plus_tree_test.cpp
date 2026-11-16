@@ -4,17 +4,17 @@
 #include <map>
 #include <random>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
-#include "nexus/index/b_plus_tree.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
+#include "ceebase/index/b_plus_tree.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class BPlusTreeTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_btree_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_btree_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "btree.nxdb";
         std::filesystem::remove(db_path_);
@@ -150,4 +150,4 @@ TEST_F(BPlusTreeTest, PersistenceAcrossRestart) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

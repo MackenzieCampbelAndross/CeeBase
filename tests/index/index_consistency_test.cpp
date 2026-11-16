@@ -4,19 +4,19 @@
 #include <string>
 #include <vector>
 
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class IndexConsistencyTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_index_consistency_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_index_consistency_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "test_idx.nxdb";
         wal_path_ = test_dir_ / "test_idx.wal";
@@ -184,4 +184,4 @@ TEST_F(IndexConsistencyTest, RollbackRestoresIndexEntries) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

@@ -1,12 +1,12 @@
-#include "nexus/record/tuple.hpp"
+#include "ceebase/record/tuple.hpp"
 
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
 
-#include "nexus/common/byte_utils.hpp"
+#include "ceebase/common/byte_utils.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 Tuple::Tuple(std::span<const uint8_t> data, RID rid)
     : data_(data.begin(), data.end()), rid_(rid) {}
@@ -140,4 +140,4 @@ std::string Tuple::ToString(const Schema& schema) const {
     return ss.str();
 }
 
-} // namespace nexus
+} // namespace ceebase

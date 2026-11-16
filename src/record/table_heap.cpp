@@ -1,8 +1,8 @@
-#include "nexus/record/table_heap.hpp"
+#include "ceebase/record/table_heap.hpp"
 
-#include "nexus/record/slotted_page.hpp"
+#include "ceebase/record/slotted_page.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 Result<std::unique_ptr<TableHeap>> TableHeap::Create(BufferPoolManager* bpm) {
     page_id_t first_page_id = INVALID_PAGE_ID;
@@ -228,4 +228,4 @@ TableIterator TableHeap::End() {
     return TableIterator(this, RID());
 }
 
-} // namespace nexus
+} // namespace ceebase

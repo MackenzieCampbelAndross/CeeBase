@@ -2,7 +2,7 @@
 
 ## Overview
 
-**NexusDB** uses an operator-based physical execution engine built upon the classical Volcano Iterator Model. Queries execute pipelined tuple streams without materializing entire intermediate tables into memory whenever possible.
+**CeeBase** uses an operator-based physical execution engine built upon the classical Volcano Iterator Model. Queries execute pipelined tuple streams without materializing entire intermediate tables into memory whenever possible.
 
 ---
 
@@ -21,7 +21,7 @@ A logical query plan is an abstract tree representing relational algebra operati
 
 ---
 
-## 2. Query Optimizer (`nexus::Optimizer`)
+## 2. Query Optimizer (`ceebase::Optimizer`)
 
 The rule-based and cost-based optimizer transforms the logical plan into an optimal physical execution plan.
 
@@ -88,12 +88,12 @@ public:
 The `EXPLAIN` statement outputs a formatted summary of the query compilation lifecycle:
 
 ```sql
-nexus> EXPLAIN SELECT * FROM employees WHERE id = 10;
+ceebase> EXPLAIN SELECT * FROM employees WHERE id = 10;
 ```
 
 Output:
 ```
-=== NexusDB Query Execution Plan ===
+=== CeeBase Query Execution Plan ===
 
 [1. Logical Query Plan]:
   -> Filter [Predicate: (id = 10)]

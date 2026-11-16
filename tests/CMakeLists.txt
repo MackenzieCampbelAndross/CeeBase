@@ -1,14 +1,14 @@
 # Standalone Crash Injection Worker (runs in a separate OS process and terminates abruptly)
-add_executable(nexus_crash_worker
+add_executable(ceebase_crash_worker
     recovery/crash_worker.cpp
 )
 
-target_link_libraries(nexus_crash_worker PRIVATE
-    nexus_core
+target_link_libraries(ceebase_crash_worker PRIVATE
+    ceebase_core
 )
 
 # Unified GTest Test Runner
-add_executable(nexus_tests
+add_executable(ceebase_tests
     common/status_test.cpp
     common/types_test.cpp
     common/byte_utils_test.cpp
@@ -28,14 +28,14 @@ add_executable(nexus_tests
     concurrency/transaction_stress_test.cpp
 )
 
-target_link_libraries(nexus_tests PRIVATE
-    nexus_core
+target_link_libraries(ceebase_tests PRIVATE
+    ceebase_core
     GTest::gtest
     GTest::gtest_main
 )
 
 # Ensure worker binary is built before running tests
-add_dependencies(nexus_tests nexus_crash_worker)
+add_dependencies(ceebase_tests ceebase_crash_worker)
 
 include(GoogleTest)
-gtest_discover_tests(nexus_tests)
+gtest_discover_tests(ceebase_tests)

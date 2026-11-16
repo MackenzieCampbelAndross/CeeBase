@@ -1,6 +1,6 @@
-#include "nexus/common/status.hpp"
+#include "ceebase/common/status.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 std::string_view StatusCodeToString(StatusCode code) noexcept {
     switch (code) {
@@ -43,4 +43,4 @@ std::string Status::ToString() const {
     return result;
 }
 
-} // namespace nexus
+} // namespace ceebase

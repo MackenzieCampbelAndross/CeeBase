@@ -1,6 +1,6 @@
-#include "nexus/planner/logical_plan.hpp"
+#include "ceebase/planner/logical_plan.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 std::string_view PlanTypeToString(PlanType type) noexcept {
     switch (type) {
@@ -78,4 +78,4 @@ std::string LogicalAggregate::ToString(int indent) const {
     return s;
 }
 
-} // namespace nexus
+} // namespace ceebase

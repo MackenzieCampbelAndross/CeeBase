@@ -2,20 +2,20 @@
 
 #include <filesystem>
 
-#include "nexus/catalog/catalog.hpp"
-#include "nexus/concurrency/transaction_manager.hpp"
-#include "nexus/execution/execution_engine.hpp"
-#include "nexus/recovery/log_manager.hpp"
-#include "nexus/recovery/recovery_engine.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/catalog/catalog.hpp"
+#include "ceebase/concurrency/transaction_manager.hpp"
+#include "ceebase/execution/execution_engine.hpp"
+#include "ceebase/recovery/log_manager.hpp"
+#include "ceebase/recovery/recovery_engine.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class RecoveryTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_recovery_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_recovery_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "recovery.nxdb";
         wal_path_ = test_dir_ / "recovery.wal";
@@ -137,4 +137,4 @@ TEST_F(RecoveryTest, CrashRecoveryUncommittedTransactionRollback) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

@@ -2,7 +2,7 @@
 
 ## Overview
 
-**NexusDB** provides transactional guarantees through a dedicated `TransactionManager` coordinating with the `LogManager` (Write-Ahead Logging) and `BufferPoolManager`.
+**CeeBase** provides transactional guarantees through a dedicated `TransactionManager` coordinating with the `LogManager` (Write-Ahead Logging) and `BufferPoolManager`.
 
 ---
 
@@ -51,21 +51,21 @@ public:
 Transactions are fully controllable via interactive and programmatic SQL commands:
 
 ```sql
-nexus> BEGIN;
+ceebase> BEGIN;
 Query OK, 0 row(s) affected (0.012 ms)
 
-nexus> INSERT INTO accounts VALUES (1, 'Alice', 5000.0);
+ceebase> INSERT INTO accounts VALUES (1, 'Alice', 5000.0);
 Query OK, 1 row(s) affected (0.045 ms)
 
-nexus> UPDATE accounts SET balance = 4500.0 WHERE id = 1;
+ceebase> UPDATE accounts SET balance = 4500.0 WHERE id = 1;
 Query OK, 1 row(s) affected (0.038 ms)
 
-nexus> ROLLBACK;
+ceebase> ROLLBACK;
 Query OK, 0 row(s) affected (0.021 ms)
 
-nexus> SELECT * FROM accounts;
+ceebase> SELECT * FROM accounts;
 0 row(s) in set (0.019 ms)
 ```
 
 ### Single-Writer Concurrency Control
-NexusDB currently enforces a robust single-writer / multiple-reader model protected by fine-grained component latches across the catalog, buffer pool, disk manager, and table heaps, preventing concurrent race conditions and data corruption.
+CeeBase currently enforces a robust single-writer / multiple-reader model protected by fine-grained component latches across the catalog, buffer pool, disk manager, and table heaps, preventing concurrent race conditions and data corruption.

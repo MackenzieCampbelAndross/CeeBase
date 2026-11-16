@@ -1,6 +1,6 @@
-#include "nexus/planner/optimizer.hpp"
+#include "ceebase/planner/optimizer.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 std::unique_ptr<LogicalPlanNode> Optimizer::Optimize(std::unique_ptr<LogicalPlanNode> plan) {
     if (!plan) return nullptr;
@@ -113,4 +113,4 @@ PlanCost Optimizer::EstimateCost(const LogicalPlanNode* plan) const {
     return cost;
 }
 
-} // namespace nexus
+} // namespace ceebase

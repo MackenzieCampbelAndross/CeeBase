@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "nexus/buffer/lru_replacer.hpp"
+#include "ceebase/buffer/lru_replacer.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(LRUReplacerTest, BasicEvictionOrder) {
@@ -54,4 +54,4 @@ TEST(LRUReplacerTest, RepinningAndUnpinning) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

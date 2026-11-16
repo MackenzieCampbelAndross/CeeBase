@@ -1,9 +1,9 @@
-#include "nexus/record/slotted_page.hpp"
+#include "ceebase/record/slotted_page.hpp"
 
 #include <algorithm>
 #include <cstring>
 
-namespace nexus {
+namespace ceebase {
 
 void SlottedPage::Init(page_id_t page_id, page_id_t prev_page, page_id_t next_page) {
     std::memset(data_, 0, PAGE_SIZE);
@@ -319,4 +319,4 @@ bool SlottedPage::VerifyChecksum() const noexcept {
     return expected == actual;
 }
 
-} // namespace nexus
+} // namespace ceebase

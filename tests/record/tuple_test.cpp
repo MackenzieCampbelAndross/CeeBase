@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "nexus/record/schema.hpp"
-#include "nexus/record/tuple.hpp"
-#include "nexus/record/value.hpp"
+#include "ceebase/record/schema.hpp"
+#include "ceebase/record/tuple.hpp"
+#include "ceebase/record/value.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(TupleTest, SerializationRoundTrip) {
@@ -65,4 +65,4 @@ TEST(TupleTest, StringFormatting) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

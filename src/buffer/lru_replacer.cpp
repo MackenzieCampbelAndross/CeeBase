@@ -1,6 +1,6 @@
-#include "nexus/buffer/lru_replacer.hpp"
+#include "ceebase/buffer/lru_replacer.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 LRUReplacer::LRUReplacer(size_t num_pages) : capacity_(num_pages) {}
 
@@ -40,4 +40,4 @@ size_t LRUReplacer::Size() const {
     return lru_map_.size();
 }
 
-} // namespace nexus
+} // namespace ceebase

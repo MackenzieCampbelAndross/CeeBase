@@ -1,8 +1,8 @@
-#include "nexus/parser/parser.hpp"
+#include "ceebase/parser/parser.hpp"
 
 #include <stdexcept>
 
-namespace nexus {
+namespace ceebase {
 
 const Token& Parser::Peek() const noexcept {
     return tokens_[cursor_];
@@ -545,4 +545,4 @@ Result<std::unique_ptr<Expression>> Parser::ParsePrimary() {
     return Status::InvalidArgument("Syntax error: unexpected token '" + cur.text + "' in expression");
 }
 
-} // namespace nexus
+} // namespace ceebase

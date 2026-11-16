@@ -1,11 +1,11 @@
-# NexusDB
+# CeeBase
 
 [![C++20](https://img.shields.io/badge/standard-C%2B%2B20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![CMake](https://img.shields.io/badge/build-CMake%203.20%2B-orange.svg)](https://cmake.org)
 [![Tests](https://img.shields.io/badge/tests-57%2F57%20passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**NexusDB** is a high-performance, educational relational database management system implemented from first principles in modern C++20.
+**CeeBase** is a high-performance, educational relational database management system implemented from first principles in modern C++20.
 
 It implements its own persistent storage engine, fixed 4 KB slotted database pages, buffer pool manager with LRU eviction and strict WAL invariant enforcement, persistent B+ Tree indexing, custom SQL lexer, recursive descent parser and AST, Volcano-iterator query execution engine, cost-based optimizer, Write-Ahead Logging (WAL) with operating-system level durable synchronization (`FlushFileBuffers` / `fsync`), idempotent crash recovery, and interactive CLI shell.
 
@@ -121,21 +121,21 @@ Measured on AMD / Intel x86_64 running Windows 11 with GCC 16.2.0 (`-O3` Release
 
 ```bash
 # Clone the repository
-git clone https://github.com/MackenzieCampbelAndross/NexusDB.git
-cd NexusDB
+git clone https://github.com/MackenzieCampbelAndross/CeeBase.git
+cd CeeBase
 
 # Configure build with tests and benchmarks enabled
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNEXUS_BUILD_TESTS=ON
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCEEBASE_BUILD_TESTS=ON
 
 # Compile everything
 cmake --build build
 
 # Execute full automated test suite (57/57 tests)
-./build/tests/nexus_tests.exe
+./build/tests/ceebase_tests.exe
 
 # Execute performance benchmark suite
-./build/nexus_bench.exe 500
-./build/nexus_bench.exe 10000
+./build/ceebase_bench.exe 500
+./build/ceebase_bench.exe 10000
 ```
 
 ---
@@ -157,4 +157,4 @@ cmake --build build
 
 ## License
 
-NexusDB is released under the permissive [MIT License](LICENSE).
+CeeBase is released under the permissive [MIT License](LICENSE).

@@ -1,6 +1,6 @@
-#include "nexus/index/b_plus_tree.hpp"
+#include "ceebase/index/b_plus_tree.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 // IndexIterator Implementation
 IndexIterator::IndexIterator(BufferPoolManager* bpm, page_id_t leaf_page_id, int index)
@@ -483,4 +483,4 @@ size_t BPlusTreeIndex::GetHeight() {
     return height;
 }
 
-} // namespace nexus
+} // namespace ceebase

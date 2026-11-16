@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "nexus/common/result.hpp"
-#include "nexus/common/status.hpp"
+#include "ceebase/common/result.hpp"
+#include "ceebase/common/status.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 TEST(StatusTest, OkStatus) {
@@ -56,9 +56,9 @@ TEST(ResultTest, SuccessValue) {
     EXPECT_EQ(res.value(), 42);
     EXPECT_EQ(*res, 42);
 
-    Result<std::string> str_res(std::string("NexusDB"));
+    Result<std::string> str_res(std::string("CeeBase"));
     EXPECT_TRUE(str_res.ok());
-    EXPECT_EQ(*str_res, "NexusDB");
+    EXPECT_EQ(*str_res, "CeeBase");
 }
 
 TEST(ResultTest, FailureStatus) {
@@ -81,4 +81,4 @@ TEST(ResultTest, MoveSemantics) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

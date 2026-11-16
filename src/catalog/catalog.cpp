@@ -1,6 +1,6 @@
-#include "nexus/catalog/catalog.hpp"
+#include "ceebase/catalog/catalog.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 Result<TableMetadata*> Catalog::CreateTable(std::string name, Schema schema, std::string primary_key) {
     std::lock_guard<std::mutex> guard(latch_);
@@ -203,4 +203,4 @@ Status Catalog::DropIndex(std::string_view index_name) {
     return Status::Ok();
 }
 
-} // namespace nexus
+} // namespace ceebase

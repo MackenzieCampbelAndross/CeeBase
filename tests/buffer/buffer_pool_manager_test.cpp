@@ -2,15 +2,15 @@
 
 #include <filesystem>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class BufferPoolManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_bpm_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_bpm_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "test_bpm.nxdb";
         std::filesystem::remove(db_path_);
@@ -125,4 +125,4 @@ TEST_F(BufferPoolManagerTest, PageGuardRAIIUnpinning) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase

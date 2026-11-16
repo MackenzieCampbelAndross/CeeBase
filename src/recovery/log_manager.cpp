@@ -1,11 +1,11 @@
-#include "nexus/recovery/log_manager.hpp"
+#include "ceebase/recovery/log_manager.hpp"
 
 #include <cstring>
 #include <iostream>
 
-#include "nexus/common/os_utils.hpp"
+#include "ceebase/common/os_utils.hpp"
 
-namespace nexus {
+namespace ceebase {
 
 namespace {
 
@@ -148,4 +148,4 @@ void LogManager::Clear() {
     wal_file_ = OpenBinaryFile(wal_path_, "w+b");
 }
 
-} // namespace nexus
+} // namespace ceebase

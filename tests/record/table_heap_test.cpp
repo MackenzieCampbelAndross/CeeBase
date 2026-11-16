@@ -3,18 +3,18 @@
 #include <filesystem>
 #include <vector>
 
-#include "nexus/buffer/buffer_pool_manager.hpp"
-#include "nexus/record/schema.hpp"
-#include "nexus/record/table_heap.hpp"
-#include "nexus/storage/disk_manager.hpp"
+#include "ceebase/buffer/buffer_pool_manager.hpp"
+#include "ceebase/record/schema.hpp"
+#include "ceebase/record/table_heap.hpp"
+#include "ceebase/storage/disk_manager.hpp"
 
-namespace nexus {
+namespace ceebase {
 namespace {
 
 class TableHeapTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_dir_ = std::filesystem::temp_directory_path() / "nexus_table_test";
+        test_dir_ = std::filesystem::temp_directory_path() / "ceebase_table_test";
         std::filesystem::create_directories(test_dir_);
         db_path_ = test_dir_ / "test_table.nxdb";
         std::filesystem::remove(db_path_);
@@ -127,4 +127,4 @@ TEST_F(TableHeapTest, UpdateAndDeleteOperations) {
 }
 
 } // namespace
-} // namespace nexus
+} // namespace ceebase
