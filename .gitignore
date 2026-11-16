@@ -1,0 +1,24 @@
+# Build directories
+build/
+bin/
+lib/
+out/
+.cache/
+
+# IDE / Editor artifacts
+.vscode/
+.idea/
+*.swp
+*~
+*.user
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test artifacts and temporary DB files
+*.db
+*.wal
+*.log
+test_output/
