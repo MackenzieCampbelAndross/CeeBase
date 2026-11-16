@@ -74,21 +74,32 @@ QueryResult ExecutionEngine::Execute(std::string_view sql) {
 
     // Check transaction commands
     std::string trimmed(sql);
-    while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == ';' || trimmed.back() == '\n' || trimmed.back() == '\r')) {
+    while (!trimmed.empty() && (std::isspace(static_cast<unsigned char>(trimmed.front())) || trimmed.front() == ';')) {
+        trimmed.erase(trimmed.begin());
+    }
+    while (!trimmed.empty() && (std::isspace(static_cast<unsigned char>(trimmed.back())) || trimmed.back() == ';')) {
         trimmed.pop_back();
     }
     std::string upper_sql = trimmed;
     for (char& c : upper_sql) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
 
-    if (upper_sql == "BEGIN" || upper_sql == "START TRANSACTION") {
+    if (upper_sql == "BEGIN" || upper_sql == "START TRANSACTION" || upper_sql == "BEGIN TRANSACTION") {
         if (txn_mgr_) {
+            if (active_txn_) {
+                return QueryResult{false, "A transaction is already active", {}, {}, 0, 0.0, ""};
+            }
             active_txn_ = txn_mgr_->Begin();
             auto end_time = std::chrono::high_resolution_clock::now();
             double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
             return QueryResult{true, "", {}, {}, 0, elapsed, ""};
         }
     } else if (upper_sql == "COMMIT") {
-        if (txn_mgr_ && active_txn_) {
+        if (txn_mgr_) {
+            if (!active_txn_) {
+                auto end_time = std::chrono::high_resolution_clock::now();
+                double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+                return QueryResult{true, "", {}, {}, 0, elapsed, ""};
+            }
             auto s = txn_mgr_->Commit(active_txn_.get());
             active_txn_.reset();
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -97,9 +108,22 @@ QueryResult ExecutionEngine::Execute(std::string_view sql) {
             return QueryResult{true, "", {}, {}, 0, elapsed, ""};
         }
     } else if (upper_sql == "ROLLBACK") {
-        if (txn_mgr_ && active_txn_) {
+        if (txn_mgr_) {
+            if (!active_txn_) {
+                auto end_time = std::chrono::high_resolution_clock::now();
+                double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+                return QueryResult{true, "", {}, {}, 0, elapsed, ""};
+            }
             auto s = txn_mgr_->Abort(active_txn_.get());
             active_txn_.reset();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+            if (!s.ok()) return QueryResult{false, s.ToString(), {}, {}, 0, elapsed, ""};
+            return QueryResult{true, "", {}, {}, 0, elapsed, ""};
+        }
+    } else if (upper_sql == "CHECKPOINT") {
+        if (txn_mgr_) {
+            auto s = txn_mgr_->Checkpoint();
             auto end_time = std::chrono::high_resolution_clock::now();
             double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
             if (!s.ok()) return QueryResult{false, s.ToString(), {}, {}, 0, elapsed, ""};

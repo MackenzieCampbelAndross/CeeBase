@@ -113,29 +113,40 @@ Measured on AMD / Intel x86_64 running Windows 11 with GCC 16.2.0 (`-O3` Release
 ## Building and Testing
 
 ### Prerequisites
-- C++20 compliant compiler (GCC 12+, Clang 15+, or MSVC 2022)
+- C++20 compliant compiler (GCC 12+, Clang 15+, or MSVC 2022 / Visual Studio 17+)
 - CMake 3.20+
-- Ninja or Make
+- Build system: Ninja, Make, or Visual Studio MSBuild
 
-### Build Instructions
+### Windows Quick Launch
+On Windows, you can simply run the provided launcher script from Command Prompt or PowerShell:
+```cmd
+run-ceebase.bat
+```
+This automatically verifies CMake, compiles `ceebase.exe` (if not already built), and launches the interactive SQL shell.
 
-```bash
-# Clone the repository
-git clone https://github.com/MackenzieCampbelAndross/CeeBase.git
-cd CeeBase
+### Manual Windows Build
 
-# Configure build with tests and benchmarks enabled
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCEEBASE_BUILD_TESTS=ON
-
-# Compile everything
+#### Option A: Ninja or MinGW (Single-Configuration)
+```cmd
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCEEBASE_BUILD_TESTS=ON
 cmake --build build
+.\build\ceebase.exe
+```
 
-# Execute full automated test suite (57/57 tests)
-./build/tests/ceebase_tests.exe
+#### Option B: Visual Studio / MSVC (Multi-Configuration)
+```cmd
+cmake -S . -B build -DCEEBASE_BUILD_TESTS=ON
+cmake --build build --config Release
+.\build\Release\ceebase.exe
+```
 
-# Execute performance benchmark suite
-./build/ceebase_bench.exe 500
-./build/ceebase_bench.exe 10000
+### Running Tests and Benchmarks
+```cmd
+# Run all 57 automated unit, stress, and crash recovery tests
+ctest --test-dir build --output-on-failure
+
+# Run the performance benchmark suite
+.\build\ceebase_bench.exe 500
 ```
 
 ---

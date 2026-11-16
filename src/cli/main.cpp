@@ -29,10 +29,12 @@ void PrintBanner() {
 }
 
 void PrintUsage(std::string_view program_name) {
-    std::cout << "Usage: " << program_name << " <command> [arguments]\n\n";
+    std::cout << "Usage: " << program_name << " [command | database_name] [arguments]\n\n";
     std::cout << "Commands:\n";
-    std::cout << "  create <database_name>   Create a new persistent database file\n";
+    std::cout << "  (none)                   Launch interactive shell with default 'ceebase.cbdb'\n";
+    std::cout << "  <database_name>          Open or create database and launch interactive shell\n";
     std::cout << "  open <database_name>     Open database and launch interactive SQL shell\n";
+    std::cout << "  create <database_name>   Create a new persistent database file\n";
     std::cout << "  info                     Display engine configuration and architecture diagnostics\n";
     std::cout << "  version                  Display version information\n";
     std::cout << "  help                     Display this help message\n\n";
@@ -82,6 +84,16 @@ int HandleInteractiveShell(std::string_view db_name) {
         } else if (db_path.extension() != ".cbdb" && db_path.extension() != ".nxdb") {
             db_path += ".cbdb";
         }
+    }
+
+    if (!std::filesystem::exists(db_path)) {
+        ceebase::DiskManager dm_create;
+        auto cs = dm_create.CreateDatabase(db_path);
+        if (!cs.ok()) {
+            std::cerr << "Failed to initialize database: " << cs.ToString() << "\n";
+            return 1;
+        }
+        std::cout << "[INFO] Initialized database: " << db_path.filename().string() << "\n";
     }
 
     ceebase::DiskManager dm;
@@ -174,8 +186,7 @@ int main(int argc, char* argv[]) {
 
     if (args.size() < 2) {
         PrintBanner();
-        PrintUsage(args[0]);
-        return 0;
+        return HandleInteractiveShell("ceebase.cbdb");
     }
 
     const std::string_view command = args[1];
@@ -214,6 +225,11 @@ int main(int argc, char* argv[]) {
         }
         PrintBanner();
         return HandleInteractiveShell(args[2]);
+    }
+
+    if (!command.starts_with("-")) {
+        PrintBanner();
+        return HandleInteractiveShell(command);
     }
 
     std::cerr << "Unknown command: '" << command << "'\n\n";
