@@ -45,12 +45,21 @@ add_library(ceebase_core
     src/concurrency/transaction_manager.cpp
     src/recovery/recovery_engine.cpp
     src/execution/execution_engine.cpp
+    src/api/ceebase_c.cpp
 )
 
 target_include_directories(ceebase_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+# C ABI Dynamic Shared Library (ceebase.dll / libceebase.so)
+add_library(ceebase_shared SHARED
+    src/api/ceebase_c.cpp
+)
+target_link_libraries(ceebase_shared PRIVATE ceebase_core)
+target_compile_definitions(ceebase_shared PRIVATE CEEBASE_BUILD_DLL)
+set_target_properties(ceebase_shared PROPERTIES OUTPUT_NAME "ceebase")
 
 # Interactive Command Line Interface Executable
 add_executable(ceebase

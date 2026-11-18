@@ -26,6 +26,7 @@ add_executable(ceebase_tests
     recovery/recovery_test.cpp
     recovery/crash_test_harness.cpp
     concurrency/transaction_stress_test.cpp
+    api/ceebase_c_test.cpp
 )
 
 target_link_libraries(ceebase_tests PRIVATE
