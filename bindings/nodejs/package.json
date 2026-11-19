@@ -1,25 +1,22 @@
 {
-  "name": "nexusdb",
+  "name": "@ceebase/client",
   "version": "1.0.0",
-  "description": "[![C++20](https://img.shields.io/badge/standard-C%2B%2B20-blue.svg)](https://en.cppreference.com/w/cpp/20)\r [![CMake](https://img.shields.io/badge/build-CMake%203.20%2B-orange.svg)](https://cmake.org)\r [![Tests](https://img.shields.io/badge/tests-57%2F57%20passing-brightgreen.svg)]()\r [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)",
+  "description": "Official TypeScript & Node.js driver for CeeBase Relational Database Engine",
   "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "types": "index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/client.test.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MackenzieCampbelAndross/CeeBase.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/MackenzieCampbelAndross/CeeBase/issues"
-  },
-  "homepage": "https://github.com/MackenzieCampbelAndross/CeeBase#readme"
+  "keywords": [
+    "ceebase",
+    "database",
+    "sql",
+    "embedded",
+    "relational"
+  ],
+  "author": "MackenzieCampbelAndross <mackenzieandross@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "koffi": "^2.15.3"
+  }
 }

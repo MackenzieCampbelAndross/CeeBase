@@ -38,3 +38,6 @@ bindings/nodejs/node_modules/
 *.wal
 *.log
 test_output/
+
+*.egg-info/
+.pytest_cache/

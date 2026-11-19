@@ -26,25 +26,57 @@ class TestCeebasePythonClient(unittest.TestCase):
                 except OSError:
                     pass
 
-    def test_version(self):
+    def test_version_and_dbapi_attributes(self):
         self.assertEqual(ceebase.__version__, "1.0.0")
+        self.assertEqual(ceebase.apilevel, "2.0")
+        self.assertEqual(ceebase.paramstyle, "qmark")
 
-    def test_crud_lifecycle(self):
+    def test_typed_crud_lifecycle(self):
         with ceebase.connect(self.db_path) as conn:
             conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, score DOUBLE);")
-            cur = conn.execute("INSERT INTO users VALUES (1, 'Alice', 95.5);")
+            
+            # Parameterized insert with typed values
+            cur = conn.cursor()
+            cur.execute("INSERT INTO users VALUES (?, ?, ?);", (1, "Alice", 95.5))
             self.assertEqual(cur.rowcount, 1)
 
-            conn.execute("INSERT INTO users VALUES (2, 'Bob', 88.0);")
-            conn.execute("INSERT INTO users VALUES (3, 'Charlie', 72.5);")
+            cur.execute("INSERT INTO users VALUES (?, ?, ?);", (2, "Bob", 88.0))
+            cur.execute("INSERT INTO users VALUES (?, ?, ?);", (3, "Charlie", 72.5))
 
-            cur = conn.execute("SELECT id, username, score FROM users ORDER BY id;")
+            # Typed fetch
+            cur.execute("SELECT id, username, score FROM users ORDER BY id;")
             rows = cur.fetchall()
             self.assertEqual(len(rows), 3)
-            self.assertEqual(rows[0][0], "1")
+
+            # Assert true types (not converted to strings!)
+            self.assertEqual(rows[0][0], 1)
+            self.assertIsInstance(rows[0][0], int)
             self.assertEqual(rows[0][1], "Alice")
-            self.assertEqual(rows[1][1], "Bob")
-            self.assertEqual(rows[2][1], "Charlie")
+            self.assertIsInstance(rows[0][1], str)
+            self.assertEqual(rows[0][2], 95.5)
+            self.assertIsInstance(rows[0][2], float)
+
+            # Parameterized point lookup
+            cur.execute("SELECT id, username, score FROM users WHERE id = ?;", (2,))
+            user2 = cur.fetchone()
+            self.assertEqual(user2, (2, "Bob", 88.0))
+
+    def test_transaction_rollback(self):
+        with ceebase.connect(self.db_path) as conn:
+            conn.execute("CREATE TABLE ledger (id INTEGER PRIMARY KEY, amount DOUBLE);")
+            conn.execute("INSERT INTO ledger VALUES (1, 100.0);")
+
+        # Rollback inside transaction block
+        conn = ceebase.connect(self.db_path)
+        cur = conn.cursor()
+        conn.execute("BEGIN;")
+        conn.execute("INSERT INTO ledger VALUES (2, 200.0);")
+        conn.rollback()
+
+        cur.execute("SELECT COUNT(*) FROM ledger;")
+        row = cur.fetchone()
+        self.assertEqual(row[0], 1) # Only row 1 exists
+        conn.close()
 
     def test_syntax_error_exception(self):
         with ceebase.connect(self.db_path) as conn:

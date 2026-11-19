@@ -46,19 +46,49 @@ Tuple::Tuple(const std::vector<Value>& values, const Schema& schema) {
         if (col.IsInlined()) {
             switch (col.GetType()) {
                 case DataType::BOOLEAN:
-                    EncodeU8(values[i].GetBoolean() ? 1 : 0, slot_ptr);
+                    if (values[i].GetType() == DataType::INTEGER) {
+                        EncodeU8(values[i].GetInteger() != 0 ? 1 : 0, slot_ptr);
+                    } else if (values[i].GetType() == DataType::BIGINT) {
+                        EncodeU8(values[i].GetBigInt() != 0 ? 1 : 0, slot_ptr);
+                    } else {
+                        EncodeU8(values[i].GetBoolean() ? 1 : 0, slot_ptr);
+                    }
                     break;
                 case DataType::INTEGER:
-                    EncodeI32(values[i].GetInteger(), slot_ptr);
+                    if (values[i].GetType() == DataType::BIGINT) {
+                        EncodeI32(static_cast<int32_t>(values[i].GetBigInt()), slot_ptr);
+                    } else {
+                        EncodeI32(values[i].GetInteger(), slot_ptr);
+                    }
                     break;
                 case DataType::BIGINT:
-                    EncodeI64(values[i].GetBigInt(), slot_ptr);
+                    if (values[i].GetType() == DataType::INTEGER) {
+                        EncodeI64(static_cast<int64_t>(values[i].GetInteger()), slot_ptr);
+                    } else {
+                        EncodeI64(values[i].GetBigInt(), slot_ptr);
+                    }
                     break;
                 case DataType::FLOAT:
-                    EncodeFloat(values[i].GetFloat(), slot_ptr);
+                    if (values[i].GetType() == DataType::INTEGER) {
+                        EncodeFloat(static_cast<float>(values[i].GetInteger()), slot_ptr);
+                    } else if (values[i].GetType() == DataType::BIGINT) {
+                        EncodeFloat(static_cast<float>(values[i].GetBigInt()), slot_ptr);
+                    } else if (values[i].GetType() == DataType::DOUBLE) {
+                        EncodeFloat(static_cast<float>(values[i].GetDouble()), slot_ptr);
+                    } else {
+                        EncodeFloat(values[i].GetFloat(), slot_ptr);
+                    }
                     break;
                 case DataType::DOUBLE:
-                    EncodeDouble(values[i].GetDouble(), slot_ptr);
+                    if (values[i].GetType() == DataType::INTEGER) {
+                        EncodeDouble(static_cast<double>(values[i].GetInteger()), slot_ptr);
+                    } else if (values[i].GetType() == DataType::BIGINT) {
+                        EncodeDouble(static_cast<double>(values[i].GetBigInt()), slot_ptr);
+                    } else if (values[i].GetType() == DataType::FLOAT) {
+                        EncodeDouble(static_cast<double>(values[i].GetFloat()), slot_ptr);
+                    } else {
+                        EncodeDouble(values[i].GetDouble(), slot_ptr);
+                    }
                     break;
                 default:
                     throw std::runtime_error("Tuple: Unsupported inlined type in serialization");

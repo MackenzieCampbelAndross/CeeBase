@@ -27,6 +27,7 @@ add_executable(ceebase_tests
     recovery/crash_test_harness.cpp
     concurrency/transaction_stress_test.cpp
     api/ceebase_c_test.cpp
+    api/ceebase_cpp_test.cpp
     security/identity_test.cpp
     security/tenant_isolation_test.cpp
     security/adversarial_security_test.cpp

@@ -93,6 +93,25 @@ TEST_F(CeebaseCTest, PrepareStepAndColumnAccessors) {
     EXPECT_EQ(rc, CEEBASE_DONE);
 
     ceebase_finalize(stmt);
+
+    // Test Parameter Binding and Statement Reset
+    ceebase_stmt* p_stmt = nullptr;
+    ASSERT_EQ(ceebase_prepare(db, "SELECT id, title, price FROM items WHERE id = ?;", &p_stmt), CEEBASE_OK);
+    ASSERT_EQ(ceebase_bind_int(p_stmt, 1, 10), CEEBASE_OK);
+
+    ASSERT_EQ(ceebase_step(p_stmt), CEEBASE_ROW);
+    EXPECT_EQ(ceebase_column_int(p_stmt, 0), 10);
+    EXPECT_STREQ(ceebase_column_text(p_stmt, 1), "Book");
+
+    // Reset and bind parameter 20
+    ASSERT_EQ(ceebase_reset(p_stmt), CEEBASE_OK);
+    ASSERT_EQ(ceebase_bind_int(p_stmt, 1, 20), CEEBASE_OK);
+
+    ASSERT_EQ(ceebase_step(p_stmt), CEEBASE_ROW);
+    EXPECT_EQ(ceebase_column_int(p_stmt, 0), 20);
+    EXPECT_STREQ(ceebase_column_text(p_stmt, 1), "Pen");
+
+    ceebase_finalize(p_stmt);
     ceebase_close(db);
 }
 

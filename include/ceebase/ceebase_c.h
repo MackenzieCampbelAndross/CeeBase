@@ -50,7 +50,16 @@ CEEBASE_API void ceebase_free_errmsg(char* errmsg);
 // Prepared statement / cursor workflow
 CEEBASE_API int ceebase_prepare(ceebase_db* db, const char* sql, ceebase_stmt** stmt);
 CEEBASE_API int ceebase_step(ceebase_stmt* stmt);
+CEEBASE_API int ceebase_reset(ceebase_stmt* stmt);
 CEEBASE_API int ceebase_finalize(ceebase_stmt* stmt);
+
+// Parameter binding (1-based index)
+CEEBASE_API int ceebase_bind_int(ceebase_stmt* stmt, int param_idx, int32_t val);
+CEEBASE_API int ceebase_bind_int64(ceebase_stmt* stmt, int param_idx, int64_t val);
+CEEBASE_API int ceebase_bind_double(ceebase_stmt* stmt, int param_idx, double val);
+CEEBASE_API int ceebase_bind_text(ceebase_stmt* stmt, int param_idx, const char* val, int len);
+CEEBASE_API int ceebase_bind_null(ceebase_stmt* stmt, int param_idx);
+CEEBASE_API int ceebase_clear_bindings(ceebase_stmt* stmt);
 
 // Column accessors
 CEEBASE_API int ceebase_column_count(ceebase_stmt* stmt);
@@ -60,6 +69,7 @@ CEEBASE_API int ceebase_column_is_null(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API int32_t ceebase_column_int(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API int64_t ceebase_column_int64(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API double ceebase_column_double(ceebase_stmt* stmt, int col_idx);
+CEEBASE_API int ceebase_column_boolean(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API const char* ceebase_column_text(ceebase_stmt* stmt, int col_idx);
 
 // Diagnostics

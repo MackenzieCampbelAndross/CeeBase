@@ -27,9 +27,19 @@ struct ceebase_db {
     int last_changes{0};
 };
 
+struct BoundParam {
+    enum class Type { NONE, INT, INT64, DOUBLE, TEXT, NULL_VAL };
+    Type type{Type::NONE};
+    int32_t int_val{0};
+    int64_t int64_val{0};
+    double double_val{0.0};
+    std::string text_val{};
+};
+
 struct ceebase_stmt {
     ceebase_db* db{nullptr};
     std::string sql;
+    std::unordered_map<int, BoundParam> bound_params;
     ceebase::QueryResult result;
     size_t current_row{0};
     bool executed{false};
@@ -186,7 +196,58 @@ CEEBASE_API int ceebase_step(ceebase_stmt* stmt) {
     }
 
     if (!stmt->executed) {
-        stmt->result = stmt->db->engine->Execute(stmt->sql);
+        std::string sql_to_run = stmt->sql;
+        if (!stmt->bound_params.empty()) {
+            std::string substituted;
+            int param_idx = 1;
+            for (size_t i = 0; i < sql_to_run.size(); ++i) {
+                if (sql_to_run[i] == '?') {
+                    auto it = stmt->bound_params.find(param_idx++);
+                    if (it != stmt->bound_params.end()) {
+                        switch (it->second.type) {
+                            case BoundParam::Type::INT:
+                                substituted += std::to_string(it->second.int_val);
+                                break;
+                            case BoundParam::Type::INT64:
+                                substituted += std::to_string(it->second.int64_val);
+                                break;
+                            case BoundParam::Type::DOUBLE: {
+                                char buf[64];
+                                std::snprintf(buf, sizeof(buf), "%.10f", it->second.double_val);
+                                std::string s(buf);
+                                while (s.size() > 2 && s.back() == '0' && s[s.size() - 2] != '.') {
+                                    s.pop_back();
+                                }
+                                substituted += s;
+                                break;
+                            }
+                            case BoundParam::Type::TEXT: {
+                                substituted += '\'';
+                                for (char c : it->second.text_val) {
+                                    if (c == '\'') substituted += "''";
+                                    else substituted += c;
+                                }
+                                substituted += '\'';
+                                break;
+                            }
+                            case BoundParam::Type::NULL_VAL:
+                                substituted += "NULL";
+                                break;
+                            default:
+                                substituted += "NULL";
+                                break;
+                        }
+                    } else {
+                        substituted += "NULL";
+                    }
+                } else {
+                    substituted += sql_to_run[i];
+                }
+            }
+            sql_to_run = std::move(substituted);
+        }
+
+        stmt->result = stmt->db->engine->Execute(sql_to_run);
         stmt->executed = true;
         stmt->current_row = 0;
         stmt->db->last_changes = static_cast<int>(stmt->result.rows_affected);
@@ -205,8 +266,56 @@ CEEBASE_API int ceebase_step(ceebase_stmt* stmt) {
     return CEEBASE_DONE;
 }
 
+CEEBASE_API int ceebase_reset(ceebase_stmt* stmt) {
+    if (!stmt) return CEEBASE_ERROR;
+    stmt->executed = false;
+    stmt->current_row = 0;
+    stmt->result = ceebase::QueryResult{};
+    return CEEBASE_OK;
+}
+
 CEEBASE_API int ceebase_finalize(ceebase_stmt* stmt) {
     delete stmt;
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_bind_int(ceebase_stmt* stmt, int param_idx, int32_t val) {
+    if (!stmt || param_idx < 1) return CEEBASE_ERROR;
+    stmt->bound_params[param_idx] = BoundParam{.type = BoundParam::Type::INT, .int_val = val};
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_bind_int64(ceebase_stmt* stmt, int param_idx, int64_t val) {
+    if (!stmt || param_idx < 1) return CEEBASE_ERROR;
+    stmt->bound_params[param_idx] = BoundParam{.type = BoundParam::Type::INT64, .int64_val = val};
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_bind_double(ceebase_stmt* stmt, int param_idx, double val) {
+    if (!stmt || param_idx < 1) return CEEBASE_ERROR;
+    stmt->bound_params[param_idx] = BoundParam{.type = BoundParam::Type::DOUBLE, .double_val = val};
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_bind_text(ceebase_stmt* stmt, int param_idx, const char* val, int len) {
+    if (!stmt || param_idx < 1) return CEEBASE_ERROR;
+    if (!val) {
+        return ceebase_bind_null(stmt, param_idx);
+    }
+    std::string text_str = (len < 0) ? std::string(val) : std::string(val, static_cast<size_t>(len));
+    stmt->bound_params[param_idx] = BoundParam{.type = BoundParam::Type::TEXT, .text_val = std::move(text_str)};
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_bind_null(ceebase_stmt* stmt, int param_idx) {
+    if (!stmt || param_idx < 1) return CEEBASE_ERROR;
+    stmt->bound_params[param_idx] = BoundParam{.type = BoundParam::Type::NULL_VAL};
+    return CEEBASE_OK;
+}
+
+CEEBASE_API int ceebase_clear_bindings(ceebase_stmt* stmt) {
+    if (!stmt) return CEEBASE_ERROR;
+    stmt->bound_params.clear();
     return CEEBASE_OK;
 }
 
@@ -285,6 +394,16 @@ CEEBASE_API double ceebase_column_double(ceebase_stmt* stmt, int col_idx) {
     } catch (...) {
         return 0.0;
     }
+}
+
+CEEBASE_API int ceebase_column_boolean(ceebase_stmt* stmt, int col_idx) {
+    const char* txt = ceebase_column_text(stmt, col_idx);
+    if (!txt) return 0;
+    if (std::strcmp(txt, "true") == 0 || std::strcmp(txt, "1") == 0 ||
+        std::strcmp(txt, "TRUE") == 0 || std::strcmp(txt, "t") == 0) {
+        return 1;
+    }
+    return 0;
 }
 
 CEEBASE_API const char* ceebase_column_text(ceebase_stmt* stmt, int col_idx) {
