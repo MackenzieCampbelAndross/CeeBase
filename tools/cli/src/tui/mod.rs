@@ -4,6 +4,7 @@ pub mod theme;
 pub mod ui;
 
 use crossterm::{
+    event::{DisableBracketedPaste, EnableBracketedPaste},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -19,7 +20,7 @@ use crate::tui::ui::render_ui;
 pub fn run_tui(client: CeebaseClient) -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    let _ = execute!(stdout, EnterAlternateScreen, EnableBracketedPaste);
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -31,7 +32,7 @@ pub fn run_tui(client: CeebaseClient) -> Result<(), Box<dyn std::error::Error>> 
     }
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    let _ = execute!(terminal.backend_mut(), DisableBracketedPaste, LeaveAlternateScreen);
     terminal.show_cursor()?;
     Ok(())
 }

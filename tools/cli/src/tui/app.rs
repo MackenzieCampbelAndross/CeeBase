@@ -46,20 +46,37 @@ impl App {
     }
 
     pub fn handle_char(&mut self, c: char) {
-        self.input.insert(self.cursor_pos, c);
+        let byte_idx = self.input.char_indices()
+            .map(|(i, _)| i)
+            .nth(self.cursor_pos)
+            .unwrap_or(self.input.len());
+        self.input.insert(byte_idx, c);
         self.cursor_pos += 1;
+    }
+
+    pub fn handle_paste(&mut self, text: &str) {
+        for c in text.chars() {
+            if c != '\r' && c != '\n' {
+                self.handle_char(c);
+            } else if c == '\n' {
+                self.handle_char(' ');
+            }
+        }
     }
 
     pub fn handle_backspace(&mut self) {
         if self.cursor_pos > 0 {
-            self.input.remove(self.cursor_pos - 1);
-            self.cursor_pos -= 1;
+            let target_char_idx = self.cursor_pos - 1;
+            if let Some((byte_idx, _)) = self.input.char_indices().nth(target_char_idx) {
+                self.input.remove(byte_idx);
+                self.cursor_pos -= 1;
+            }
         }
     }
 
     pub fn handle_delete(&mut self) {
-        if self.cursor_pos < self.input.len() {
-            self.input.remove(self.cursor_pos);
+        if let Some((byte_idx, _)) = self.input.char_indices().nth(self.cursor_pos) {
+            self.input.remove(byte_idx);
         }
     }
 
@@ -70,7 +87,8 @@ impl App {
     }
 
     pub fn move_cursor_right(&mut self) {
-        if self.cursor_pos < self.input.len() {
+        let count = self.input.chars().count();
+        if self.cursor_pos < count {
             self.cursor_pos += 1;
         }
     }
@@ -87,7 +105,7 @@ impl App {
         };
         self.history_idx = Some(next_idx);
         self.input = self.command_history[next_idx].clone();
-        self.cursor_pos = self.input.len();
+        self.cursor_pos = self.input.chars().count();
     }
 
     pub fn history_next(&mut self) {
@@ -96,7 +114,7 @@ impl App {
                 let next_idx = i + 1;
                 self.history_idx = Some(next_idx);
                 self.input = self.command_history[next_idx].clone();
-                self.cursor_pos = self.input.len();
+                self.cursor_pos = self.input.chars().count();
             } else {
                 self.history_idx = None;
                 self.input.clear();
@@ -110,7 +128,7 @@ impl App {
         for kw in SQL_KEYWORDS {
             if kw.to_uppercase().starts_with(&input_upper) && kw.len() > self.input.len() {
                 self.input = kw.to_string();
-                self.cursor_pos = self.input.len();
+                self.cursor_pos = self.input.chars().count();
                 break;
             }
         }

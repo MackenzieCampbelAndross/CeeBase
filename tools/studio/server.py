@@ -4,6 +4,7 @@ CeeBase Studio: Visual Web Management Dashboard & Versioned REST API Server
 Provides versioned /api/v1/ REST management API and web dashboard.
 """
 
+import argparse
 import http.server
 import json
 import os
@@ -296,15 +297,16 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(content)
 
 
-def run_server(port=DEFAULT_PORT, db_path=DB_FILENAME):
+def run_server(port=DEFAULT_PORT, host="127.0.0.1", db_path=DB_FILENAME):
     backend = StudioBackend(db_path)
     StudioHandler.backend = backend
 
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         daemon_threads = True
 
-    server = ThreadedHTTPServer(("127.0.0.1", port), StudioHandler)
-    print(f"CeeBase Studio REST API & Visual Console running at http://localhost:{port}")
+    server = ThreadedHTTPServer((host, port), StudioHandler)
+    display_host = "localhost" if host in ("127.0.0.1", "0.0.0.0") else host
+    print(f"CeeBase Studio REST API & Visual Console running at http://{display_host}:{port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -313,5 +315,20 @@ def run_server(port=DEFAULT_PORT, db_path=DB_FILENAME):
 
 
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
-    run_server(port)
+    parser = argparse.ArgumentParser(description="CeeBase Studio REST API & Visual Console")
+    parser.add_argument("database", nargs="?", default=None, help="Database path (default: ceebase.cbdb)")
+    parser.add_argument("--port", "-p", type=int, default=DEFAULT_PORT, help=f"Server port (default: {DEFAULT_PORT})")
+    parser.add_argument("--host", "-H", type=str, default="127.0.0.1", help="Server host (default: 127.0.0.1)")
+    args, unknown = parser.parse_known_args()
+
+    port = args.port
+    host = args.host
+    db_path = DB_FILENAME
+
+    if args.database:
+        if args.database.isdigit() and args.port == DEFAULT_PORT:
+            port = int(args.database)
+        else:
+            db_path = args.database
+
+    run_server(port=port, host=host, db_path=db_path)
