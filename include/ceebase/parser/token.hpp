@@ -55,6 +55,8 @@ enum class TokenType {
     TRUE_KW,
     FALSE_KW,
     NULL_KW,
+    IF_KW,
+    EXISTS_KW,
 
     // Data type keywords
     TYPE_INTEGER,

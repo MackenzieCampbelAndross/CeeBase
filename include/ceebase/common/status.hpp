@@ -61,6 +61,8 @@ public:
 
     [[nodiscard]] constexpr bool ok() const noexcept { return code_ == StatusCode::Ok; }
     [[nodiscard]] constexpr StatusCode code() const noexcept { return code_; }
+    [[nodiscard]] constexpr bool IsNotFound() const noexcept { return code_ == StatusCode::NotFound; }
+    [[nodiscard]] constexpr bool IsAlreadyExists() const noexcept { return code_ == StatusCode::AlreadyExists; }
     [[nodiscard]] std::string_view message() const noexcept { return message_; }
 
     [[nodiscard]] std::string ToString() const;

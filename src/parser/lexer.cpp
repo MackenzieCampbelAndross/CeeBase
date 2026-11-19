@@ -52,6 +52,8 @@ std::string_view TokenTypeToString(TokenType type) noexcept {
         case TokenType::TRUE_KW: return "TRUE";
         case TokenType::FALSE_KW: return "FALSE";
         case TokenType::NULL_KW: return "NULL";
+        case TokenType::IF_KW: return "IF";
+        case TokenType::EXISTS_KW: return "EXISTS";
         case TokenType::TYPE_INTEGER: return "INTEGER";
         case TokenType::TYPE_BIGINT: return "BIGINT";
         case TokenType::TYPE_FLOAT: return "FLOAT";
@@ -118,6 +120,8 @@ const std::unordered_map<std::string, TokenType> kKeywords = {
     {"TRUE", TokenType::TRUE_KW},
     {"FALSE", TokenType::FALSE_KW},
     {"NULL", TokenType::NULL_KW},
+    {"IF", TokenType::IF_KW},
+    {"EXISTS", TokenType::EXISTS_KW},
     {"INTEGER", TokenType::TYPE_INTEGER},
     {"INT", TokenType::TYPE_INTEGER},
     {"BIGINT", TokenType::TYPE_BIGINT},

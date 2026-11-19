@@ -102,6 +102,15 @@ Result<std::unique_ptr<Statement>> Parser::ParseStatement() {
 }
 
 Result<std::unique_ptr<Statement>> Parser::ParseCreateTable() {
+    bool if_not_exists = false;
+    if (Match(TokenType::IF_KW)) {
+        auto not_tok = Expect(TokenType::NOT, "Expected NOT after IF in CREATE TABLE");
+        if (!not_tok.ok()) return not_tok.status();
+        auto exists_tok = Expect(TokenType::EXISTS_KW, "Expected EXISTS after NOT in CREATE TABLE");
+        if (!exists_tok.ok()) return exists_tok.status();
+        if_not_exists = true;
+    }
+
     auto name_tok = Expect(TokenType::IDENTIFIER, "Expected table name in CREATE TABLE");
     if (!name_tok.ok()) return name_tok.status();
     std::string table_name = (*name_tok)->text;
@@ -142,13 +151,20 @@ Result<std::unique_ptr<Statement>> Parser::ParseCreateTable() {
     auto rparen = Expect(TokenType::RPAREN, "Expected ')' closing column definitions");
     if (!rparen.ok()) return rparen.status();
 
-    return std::unique_ptr<Statement>(std::make_unique<CreateTableStatement>(table_name, std::move(columns)));
+    return std::unique_ptr<Statement>(std::make_unique<CreateTableStatement>(table_name, std::move(columns), if_not_exists));
 }
 
 Result<std::unique_ptr<Statement>> Parser::ParseDropTable() {
+    bool if_exists = false;
+    if (Match(TokenType::IF_KW)) {
+        auto exists_tok = Expect(TokenType::EXISTS_KW, "Expected EXISTS after IF in DROP TABLE");
+        if (!exists_tok.ok()) return exists_tok.status();
+        if_exists = true;
+    }
+
     auto name_tok = Expect(TokenType::IDENTIFIER, "Expected table name in DROP TABLE");
     if (!name_tok.ok()) return name_tok.status();
-    return std::unique_ptr<Statement>(std::make_unique<DropTableStatement>((*name_tok)->text));
+    return std::unique_ptr<Statement>(std::make_unique<DropTableStatement>((*name_tok)->text, if_exists));
 }
 
 Result<std::unique_ptr<Statement>> Parser::ParseCreateIndex() {

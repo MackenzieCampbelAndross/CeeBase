@@ -199,6 +199,9 @@ QueryResult ExecutionEngine::ExecuteCreateTable(const CreateTableStatement* stmt
 
     auto res = catalog_->CreateTable(stmt->GetTableName(), std::move(schema), pk_col);
     if (!res.ok()) {
+        if (stmt->IfNotExists() && res.status().IsAlreadyExists()) {
+            return QueryResult{true, "", {}, {}, 0, 0.0, ""};
+        }
         return QueryResult{false, res.status().ToString(), {}, {}, 0, 0.0, ""};
     }
     return QueryResult{true, "", {}, {}, 0, 0.0, ""};
@@ -207,6 +210,9 @@ QueryResult ExecutionEngine::ExecuteCreateTable(const CreateTableStatement* stmt
 QueryResult ExecutionEngine::ExecuteDropTable(const DropTableStatement* stmt) {
     auto s = catalog_->DropTable(stmt->GetTableName());
     if (!s.ok()) {
+        if (stmt->IfExists() && s.IsNotFound()) {
+            return QueryResult{true, "", {}, {}, 0, 0.0, ""};
+        }
         return QueryResult{false, s.ToString(), {}, {}, 0, 0.0, ""};
     }
     return QueryResult{true, "", {}, {}, 0, 0.0, ""};

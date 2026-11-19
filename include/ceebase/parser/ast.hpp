@@ -158,27 +158,32 @@ struct ColumnDefinition {
 
 class CreateTableStatement : public Statement {
 public:
-    CreateTableStatement(std::string table_name, std::vector<ColumnDefinition> columns)
-        : table_name_(std::move(table_name)), columns_(std::move(columns)) {}
+    CreateTableStatement(std::string table_name, std::vector<ColumnDefinition> columns, bool if_not_exists = false)
+        : table_name_(std::move(table_name)), columns_(std::move(columns)), if_not_exists_(if_not_exists) {}
 
     [[nodiscard]] StatementType GetType() const noexcept override { return StatementType::CREATE_TABLE; }
     [[nodiscard]] const std::string& GetTableName() const noexcept { return table_name_; }
     [[nodiscard]] const std::vector<ColumnDefinition>& GetColumns() const noexcept { return columns_; }
+    [[nodiscard]] bool IfNotExists() const noexcept { return if_not_exists_; }
 
 private:
     std::string table_name_;
     std::vector<ColumnDefinition> columns_;
+    bool if_not_exists_{false};
 };
 
 class DropTableStatement : public Statement {
 public:
-    explicit DropTableStatement(std::string table_name) : table_name_(std::move(table_name)) {}
+    explicit DropTableStatement(std::string table_name, bool if_exists = false)
+        : table_name_(std::move(table_name)), if_exists_(if_exists) {}
 
     [[nodiscard]] StatementType GetType() const noexcept override { return StatementType::DROP_TABLE; }
     [[nodiscard]] const std::string& GetTableName() const noexcept { return table_name_; }
+    [[nodiscard]] bool IfExists() const noexcept { return if_exists_; }
 
 private:
     std::string table_name_;
+    bool if_exists_{false};
 };
 
 class CreateIndexStatement : public Statement {
