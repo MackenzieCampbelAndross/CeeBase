@@ -44,22 +44,29 @@ fi
 
 # 2. Download from GitHub Release
 if [ "$INSTALLED" = false ]; then
-  echo "[+] Fetching latest release from GitHub..."
   TARBALL="ceebase-$OS-$ARCH.tar.gz"
   DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/$TARBALL"
+  echo "[+] Downloading $TARBALL from GitHub Releases..."
   
-  if curl -fSL -o "/tmp/$TARBALL" "$DOWNLOAD_URL" 2>/dev/null; then
+  if curl -fSL -o "/tmp/$TARBALL" "$DOWNLOAD_URL"; then
     tar -xzf "/tmp/$TARBALL" -C "$INSTALL_DIR"
     chmod +x "$EXE_PATH"
     rm -f "/tmp/$TARBALL"
     INSTALLED=true
+    echo "[+] Downloaded and extracted to $INSTALL_DIR"
+  else
+    echo "[-] Release asset download failed. Checking cargo fallback..."
   fi
 fi
 
 # 3. Cargo fallback
 if [ "$INSTALLED" = false ] && command -v cargo >/dev/null 2>&1; then
   echo "[+] Compiling via cargo..."
-  cargo install --path tools/cli --root "$HOME/.ceebase"
+  if [ -d "tools/cli" ]; then
+    cargo install --path tools/cli --root "$HOME/.ceebase"
+  else
+    cargo install --git "https://github.com/$REPO.git" --root "$HOME/.ceebase"
+  fi
   INSTALLED=true
 fi
 
