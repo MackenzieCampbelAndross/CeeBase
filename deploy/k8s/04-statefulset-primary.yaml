@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ceebase-primary
+  namespace: ceebase-system
+  labels:
+    app: ceebase
+    role: primary
+spec:
+  serviceName: ceebase-internal
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ceebase
+      role: primary
+  template:
+    metadata:
+      labels:
+        app: ceebase
+        role: primary
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: ceebase-engine
+          image: ceebase:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http-api
+          envFrom:
+            - configMapRef:
+                name: ceebase-config
+            - secretRef:
+                name: ceebase-secrets
+          env:
+            - name: CEEBASE_ROLE
+              value: "PRIMARY"
+            - name: CEEBASE_EPOCH
+              value: "1"
+            - name: CEEBASE_DATABASE
+              value: "/var/lib/ceebase/data/ceebase.cbdb"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/ceebase/data
+            - name: backups
+              mountPath: /var/lib/ceebase/backups
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ceebase-primary-pvc
+        - name: backups
+          persistentVolumeClaim:
+            claimName: ceebase-backup-pvc

@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ceebase-backup-nightly
+  namespace: ceebase-system
+spec:
+  schedule: "0 2 * * *"  # Every night at 02:00 UTC
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+          containers:
+            - name: backup-worker
+              image: ceebase:1.0.0
+              command:
+                - python3
+                - -c
+                - |
+                  from src.infra.backup_manager import BackupManager
+                  import os
+                  key = os.environ.get("BACKUP_ENCRYPTION_KEY")
+                  bm = BackupManager("/var/lib/ceebase/backups")
+                  meta = bm.create_full_backup("/var/lib/ceebase/data/ceebase.cbdb", encryption_key=key)
+                  print("Created encrypted backup:", meta.backup_id, "size:", meta.file_size_bytes)
+                  bm.apply_retention_policy(keep_last_n=7)
+                  print("Applied retention policy: kept last 7 backups")
+              envFrom:
+                - secretRef:
+                    name: ceebase-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/ceebase/data
+                  readOnly: true
+                - name: backups
+                  mountPath: /var/lib/ceebase/backups
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: ceebase-primary-pvc
+            - name: backups
+              persistentVolumeClaim:
+                claimName: ceebase-backup-pvc

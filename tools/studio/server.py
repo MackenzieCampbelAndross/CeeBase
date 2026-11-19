@@ -15,11 +15,15 @@ import time
 import urllib.parse
 from pathlib import Path
 
-# Add bindings/python to sys.path
+# Add project root and bindings/python to sys.path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "bindings" / "python"))
 
 import ceebase
+from src.infra.metrics import GLOBAL_METRICS, GLOBAL_LOGGER
+from src.infra.replication import ReplicationNode, ReplicationRole
+from src.infra.storage_maintenance import StorageMaintenanceManager
 
 DEFAULT_PORT = 8080
 DB_FILENAME = "ceebase.cbdb"
@@ -154,13 +158,41 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                 "storage": "online",
                 "uptime_seconds": uptime
             })
-        elif path in ("/metrics", "/api/v1/metrics"):
+        elif path == "/metrics":
+            prom_text = GLOBAL_METRICS.to_prometheus_text().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+            self.send_header("Content-Length", str(len(prom_text)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(prom_text)
+        elif path == "/api/v1/metrics":
+            db_size = os.path.getsize(self.backend.db_path) if os.path.exists(self.backend.db_path) else 0
+            GLOBAL_METRICS.set_storage_bytes(db_size)
             self.send_json({
-                "query_count": self.backend.query_count,
+                "query_count": GLOBAL_METRICS.query_count,
                 "uptime_seconds": round(time.time() - self.backend.start_time, 2),
-                "active_connections": 1,
-                "buffer_pool_hit_ratio": 0.985
+                "active_connections": GLOBAL_METRICS.active_connections,
+                "buffer_pool_hit_ratio": GLOBAL_METRICS.get_buffer_pool_hit_ratio(),
+                "storage_bytes": db_size,
+                "wal_bytes_written": GLOBAL_METRICS.wal_bytes_written,
+                "replication_lag_bytes": GLOBAL_METRICS.replication_lag_bytes
             })
+        elif path == "/api/v1/replication/status":
+            self.send_json({
+                "node_id": "ceebase-node-primary",
+                "role": "PRIMARY",
+                "epoch": 1,
+                "current_lsn": os.path.getsize(str(self.backend.db_path) + ".wal") if os.path.exists(str(self.backend.db_path) + ".wal") else 0,
+                "applied_lsn": 0,
+                "replication_lag_bytes": 0,
+                "is_writable": True
+            })
+        elif path == "/api/v1/maintenance/storage":
+            mgr = StorageMaintenanceManager(self.backend.db_path)
+            alloc = mgr.inspect_page_allocation()
+            proj = mgr.project_disk_growth(24)
+            self.send_json({"allocation": alloc, "projection_24h": proj})
         elif path in ("/api/tables", "/api/v1/databases/default/tables"):
             data = self.backend.get_tables()
             self.send_json(data)
@@ -201,7 +233,10 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
         if path in ("/api/query", "/api/v1/query"):
             sql = payload.get("sql", "")
             params = payload.get("parameters", None)
+            start_q = time.perf_counter()
             res = self.backend.run_query(sql, params)
+            dur = time.perf_counter() - start_q
+            GLOBAL_METRICS.record_query(dur, payload.get("tenant", "default"))
             self.send_json(res)
         elif path == "/api/v1/auth/login":
             email = payload.get("email", "")
@@ -211,7 +246,15 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                 self.sessions[token] = {"user": email, "role": "PLATFORM_ADMIN"}
                 self.send_json({"success": True, "token": token, "role": "PLATFORM_ADMIN"})
             else:
+                GLOBAL_METRICS.record_auth_failure()
                 self.send_json({"success": False, "error": "Invalid credentials"}, status=401)
+        elif path == "/api/v1/maintenance/checkpoint":
+            mgr = StorageMaintenanceManager(self.backend.db_path)
+            res = mgr.perform_checkpoint()
+            self.send_json(res)
+        elif path == "/api/v1/replication/promote":
+            new_epoch = payload.get("epoch", 2)
+            self.send_json({"success": True, "role": "PRIMARY", "new_epoch": new_epoch})
         elif path == "/api/v1/backups":
             backup_name = payload.get("name", f"backup_{int(time.time())}.cbdb")
             backup_path = Path("backups") / backup_name

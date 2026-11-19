@@ -23,12 +23,13 @@ class TestCeebaseCLI(unittest.TestCase):
     def setUpClass(cls):
         cls.cli = CLI_BIN
         cls.test_db = str(REPO_ROOT / "test_cli_runner.cbdb")
-        cls.test_wal = cls.test_db + ".wal"
+        cls.test_wal = str(Path(cls.test_db).with_suffix(".wal"))
         cls.backup_db = str(REPO_ROOT / "backups" / "test_cli_runner_bkp.cbdb")
         cls.restored_db = str(REPO_ROOT / "test_cli_runner_restored.cbdb")
+        cls.restored_wal = str(Path(cls.restored_db).with_suffix(".wal"))
 
         # Cleanup any previous runs
-        for p in [cls.test_db, cls.test_wal, cls.backup_db, cls.restored_db, cls.restored_db + ".wal"]:
+        for p in [cls.test_db, cls.test_wal, cls.backup_db, cls.restored_db, cls.restored_wal]:
             if os.path.exists(p):
                 try:
                     os.remove(p)
@@ -37,7 +38,7 @@ class TestCeebaseCLI(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        for p in [cls.test_db, cls.test_wal, cls.backup_db, cls.restored_db, cls.restored_db + ".wal"]:
+        for p in [cls.test_db, cls.test_wal, cls.backup_db, cls.restored_db, cls.restored_wal]:
             if os.path.exists(p):
                 try:
                     os.remove(p)

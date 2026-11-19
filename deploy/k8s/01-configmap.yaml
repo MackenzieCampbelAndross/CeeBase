@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ceebase-config
+  namespace: ceebase-system
+data:
+  CEEBASE_PORT: "8080"
+  CEEBASE_HOST: "0.0.0.0"
+  CEEBASE_BUFFER_POOL_PAGES: "16384"  # 64 MB
+  CEEBASE_CHECKPOINT_INTERVAL_SEC: "60"
+  CEEBASE_WAL_ROTATION_MB: "50"
+  CEEBASE_LOG_LEVEL: "INFO"

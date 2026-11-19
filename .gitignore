@@ -45,3 +45,5 @@ test_output/
 # Rust build artifacts
 target/
 tools/cli/target/
+
+backups/

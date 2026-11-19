@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ceebase-service
+  namespace: ceebase-system
+  labels:
+    app: ceebase
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: ceebase
+    role: primary
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ceebase-internal
+  namespace: ceebase-system
+  labels:
+    app: ceebase
+spec:
+  clusterIP: None
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: ceebase

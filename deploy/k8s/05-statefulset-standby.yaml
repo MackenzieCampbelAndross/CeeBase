@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ceebase-standby
+  namespace: ceebase-system
+  labels:
+    app: ceebase
+    role: standby
+spec:
+  serviceName: ceebase-internal
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ceebase
+      role: standby
+  template:
+    metadata:
+      labels:
+        app: ceebase
+        role: standby
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: ceebase-replica
+          image: ceebase:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http-api
+          envFrom:
+            - configMapRef:
+                name: ceebase-config
+            - secretRef:
+                name: ceebase-secrets
+          env:
+            - name: CEEBASE_ROLE
+              value: "STANDBY"
+            - name: CEEBASE_PRIMARY_URL
+              value: "http://ceebase-primary.ceebase-system.svc.cluster.local:8080"
+            - name: CEEBASE_EPOCH
+              value: "1"
+            - name: CEEBASE_DATABASE
+              value: "/var/lib/ceebase/data/ceebase_standby.cbdb"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/ceebase/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ceebase-standby-pvc

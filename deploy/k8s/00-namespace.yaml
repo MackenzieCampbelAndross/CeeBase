@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ceebase-system
+  labels:
+    app.kubernetes.io/name: ceebase
+    app.kubernetes.io/part-of: ceebase-infrastructure
