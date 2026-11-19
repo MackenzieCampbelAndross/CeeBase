@@ -29,34 +29,77 @@ pub struct CeebaseLib {
 
 impl CeebaseLib {
     pub fn load() -> Result<Self, String> {
-        let candidates = [
-            std::env::var("CEEBASE_LIB_PATH").unwrap_or_default(),
-            "build/libceebase.dll".to_string(),
-            "libceebase.dll".to_string(),
-            "../build/libceebase.dll".to_string(),
-            "../../build/libceebase.dll".to_string(),
-            "build/bin/libceebase.dll".to_string(),
-            "bin/libceebase.dll".to_string(),
-            "lib/libceebase.dll".to_string(),
-            "build/libceebase.so".to_string(),
-            "libceebase.so".to_string(),
-            "build/libceebase.dylib".to_string(),
-            "libceebase.dylib".to_string(),
+        let mut candidates: Vec<PathBuf> = Vec::new();
+
+        // 1. Explicit environment variable override
+        if let Ok(env_path) = std::env::var("CEEBASE_LIB_PATH") {
+            if !env_path.is_empty() {
+                candidates.push(PathBuf::from(env_path));
+            }
+        }
+
+        // 2. In the same directory as the current executable (crucial for standalone install ~/.ceebase/bin)
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(parent) = exe_path.parent() {
+                candidates.push(parent.join("libceebase.dylib"));
+                candidates.push(parent.join("ceebase.dylib"));
+                candidates.push(parent.join("libceebase.so"));
+                candidates.push(parent.join("ceebase.so"));
+                candidates.push(parent.join("libceebase.dll"));
+                candidates.push(parent.join("ceebase.dll"));
+
+                candidates.push(parent.join("../lib/libceebase.dylib"));
+                candidates.push(parent.join("../lib/libceebase.so"));
+                candidates.push(parent.join("../lib/libceebase.dll"));
+            }
+        }
+
+        // 3. User directory ~/.ceebase/bin and ~/.ceebase/lib
+        if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+            let base = Path::new(&home).join(".ceebase");
+            candidates.push(base.join("bin/libceebase.dylib"));
+            candidates.push(base.join("bin/libceebase.so"));
+            candidates.push(base.join("bin/libceebase.dll"));
+            candidates.push(base.join("lib/libceebase.dylib"));
+            candidates.push(base.join("lib/libceebase.so"));
+            candidates.push(base.join("lib/libceebase.dll"));
+        }
+
+        // 4. Local repository and build directory candidates
+        let local_names = [
+            "build/libceebase.dll",
+            "build/libceebase.dylib",
+            "build/libceebase.so",
+            "libceebase.dll",
+            "libceebase.dylib",
+            "libceebase.so",
+            "../build/libceebase.dll",
+            "../build/libceebase.dylib",
+            "../build/libceebase.so",
+            "../../build/libceebase.dll",
+            "../../build/libceebase.dylib",
+            "../../build/libceebase.so",
+            "build/bin/libceebase.dll",
+            "build/Release/libceebase.dll",
+            "build/Debug/libceebase.dll",
+            "/usr/local/lib/libceebase.dylib",
+            "/usr/local/lib/libceebase.so",
+            "/opt/homebrew/lib/libceebase.dylib",
         ];
+        for name in local_names {
+            candidates.push(PathBuf::from(name));
+        }
 
         let mut found_path: Option<PathBuf> = None;
-        for c in &candidates {
-            if !c.is_empty() {
-                let p = Path::new(c);
-                if p.exists() {
-                    found_path = Some(p.to_path_buf());
-                    break;
-                }
+        for p in &candidates {
+            if p.exists() {
+                found_path = Some(p.clone());
+                break;
             }
         }
 
         let path = found_path.ok_or_else(|| {
-            "Could not locate libceebase.dll / libceebase.so. Please set CEEBASE_LIB_PATH or ensure build/libceebase.dll exists.".to_string()
+            "Could not locate native library (libceebase.dylib / libceebase.so / libceebase.dll).".to_string()
         })?;
 
         unsafe {

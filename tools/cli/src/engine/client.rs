@@ -25,21 +25,49 @@ impl CeebaseClient {
             });
         }
 
-        let lib = CeebaseLib::load()?;
-        let c_path = CString::new(target).map_err(|e| e.to_string())?;
-        let mut handle: *mut CeebaseHandle = ptr::null_mut();
+        match CeebaseLib::load() {
+            Ok(lib) => {
+                let c_path = CString::new(target).map_err(|e| e.to_string())?;
+                let mut handle: *mut CeebaseHandle = ptr::null_mut();
 
-        let rc = unsafe { (lib.open)(c_path.as_ptr(), &mut handle) };
-        if rc != 0 || handle.is_null() {
-            return Err(format!("Failed to open database '{}' (error code: {})", target, rc));
+                let rc = unsafe { (lib.open)(c_path.as_ptr(), &mut handle) };
+                if rc != 0 || handle.is_null() {
+                    return Err(format!("Failed to open database '{}' (error code: {})", target, rc));
+                }
+
+                Ok(Self {
+                    lib: Some(lib),
+                    handle,
+                    target: target.to_string(),
+                    is_remote: false,
+                })
+            }
+            Err(err) => {
+                // If local engine library is not found, check if a local CeeBase server is active
+                let check_urls = ["http://127.0.0.1:8080", "http://localhost:8080"];
+                for url in check_urls {
+                    let health_endpoint = format!("{}/api/v1/health", url);
+                    if let Ok(resp) = ureq::get(&health_endpoint)
+                        .timeout(std::time::Duration::from_millis(200))
+                        .call()
+                    {
+                        if resp.status() == 200 {
+                            return Ok(Self {
+                                lib: None,
+                                handle: ptr::null_mut(),
+                                target: url.to_string(),
+                                is_remote: true,
+                            });
+                        }
+                    }
+                }
+
+                Err(format!(
+                    "{}\n\nHint: To connect to a running CeeBase server:\n  ceebase connect http://localhost:8080\nOr start the server:\n  python tools/studio/server.py",
+                    err
+                ))
+            }
         }
-
-        Ok(Self {
-            lib: Some(lib),
-            handle,
-            target: target.to_string(),
-            is_remote: false,
-        })
     }
 
     pub fn get_version(&self) -> String {
