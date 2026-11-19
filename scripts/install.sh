@@ -51,6 +51,8 @@ if [ "$INSTALLED" = false ]; then
   if curl -fSL -o "/tmp/$TARBALL" "$DOWNLOAD_URL"; then
     tar -xzf "/tmp/$TARBALL" -C "$INSTALL_DIR"
     chmod +x "$EXE_PATH"
+    chmod +x "$INSTALL_DIR"/libceebase.* 2>/dev/null || true
+    xattr -d com.apple.quarantine "$INSTALL_DIR"/* 2>/dev/null || true
     rm -f "/tmp/$TARBALL"
     INSTALLED=true
     echo "[+] Downloaded and extracted to $INSTALL_DIR"
@@ -101,6 +103,6 @@ echo "========================================================"
 echo ""
 "$EXE_PATH" --version
 echo ""
-echo "To start CeeBase, open any terminal and type:"
+echo "To start CeeBase, open a new terminal (or in this terminal run: source $SHELL_PROFILE):"
 echo "  ceebase"
 echo ""
