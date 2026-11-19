@@ -90,7 +90,25 @@ fi
 if [ -n "$SHELL_PROFILE" ]; then
   if ! grep -q ".ceebase/bin" "$SHELL_PROFILE" 2>/dev/null; then
     echo "export PATH=\"\$HOME/.ceebase/bin:\$PATH\"" >> "$SHELL_PROFILE"
-    echo "[+] Added ~/.ceebase/bin to $SHELL_PROFILE"
+  fi
+fi
+
+# 5. Link into global standard PATH (/usr/local/bin or /opt/homebrew/bin)
+# This makes 'ceebase' immediately executable in the current terminal without requiring 'source ~/.zshrc'
+LINKED=false
+for bin_dir in "/usr/local/bin" "/opt/homebrew/bin"; do
+  if [ -d "$bin_dir" ] && [ -w "$bin_dir" ]; then
+    ln -sf "$EXE_PATH" "$bin_dir/ceebase"
+    ln -sf "$INSTALL_DIR"/libceebase.* "$bin_dir/" 2>/dev/null || true
+    LINKED=true
+    break
+  fi
+done
+
+if [ "$LINKED" = false ]; then
+  if sudo -n true 2>/dev/null; then
+    sudo ln -sf "$EXE_PATH" /usr/local/bin/ceebase 2>/dev/null && LINKED=true
+    sudo ln -sf "$INSTALL_DIR"/libceebase.* /usr/local/bin/ 2>/dev/null || true
   fi
 fi
 
@@ -103,6 +121,6 @@ echo "========================================================"
 echo ""
 "$EXE_PATH" --version
 echo ""
-echo "To start CeeBase, open a new terminal (or in this terminal run: source $SHELL_PROFILE):"
+echo "Launch CeeBase anytime with:"
 echo "  ceebase"
 echo ""

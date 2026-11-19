@@ -21,18 +21,22 @@ if (-not (Test-Path $InstallDir)) {
 $Installed = $false
 
 # 1. Check if running from local repository
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path -ErrorAction SilentlyContinue
+$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
 $RepoCandidates = @(
     "tools\cli\target\release\ceebase.exe",
     "build\ceebase.exe",
-    "$ScriptDir\..\tools\cli\target\release\ceebase.exe",
-    "$ScriptDir\..\build\ceebase.exe"
+    (Join-Path $ScriptDir "..\tools\cli\target\release\ceebase.exe"),
+    (Join-Path $ScriptDir "..\build\ceebase.exe")
 )
 
 foreach ($Cand in $RepoCandidates) {
-    if (Test-Path $Cand) {
+    if ($Cand -and (Test-Path $Cand)) {
         Write-Host "[+] Installing from local build: $Cand" -ForegroundColor Green
         Copy-Item -Path $Cand -Destination $ExePath -Force
+        $LocalDll = Join-Path (Split-Path -Parent $Cand) "libceebase.dll"
+        if (Test-Path $LocalDll) {
+            Copy-Item -Path $LocalDll -Destination (Join-Path $InstallDir "libceebase.dll") -Force -ErrorAction SilentlyContinue
+        }
         $Installed = $true
         break
     }
@@ -82,10 +86,23 @@ if (-not (Test-Path $ExePath)) {
     exit 1
 }
 
-# 4. Also copy to ~/.cargo/bin if it exists (allows instant execution in active shells with cargo)
+# 4. Copy to directories already in standard PATH for immediate execution
+$DllPath = Join-Path $InstallDir "libceebase.dll"
+
 $CargoBin = Join-Path $HOME ".cargo\bin"
 if (Test-Path $CargoBin) {
     Copy-Item -Path $ExePath -Destination (Join-Path $CargoBin "ceebase.exe") -Force -ErrorAction SilentlyContinue
+    if (Test-Path $DllPath) {
+        Copy-Item -Path $DllPath -Destination (Join-Path $CargoBin "libceebase.dll") -Force -ErrorAction SilentlyContinue
+    }
+}
+
+$WindowsApps = Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps"
+if (Test-Path $WindowsApps) {
+    Copy-Item -Path $ExePath -Destination (Join-Path $WindowsApps "ceebase.exe") -Force -ErrorAction SilentlyContinue
+    if (Test-Path $DllPath) {
+        Copy-Item -Path $DllPath -Destination (Join-Path $WindowsApps "libceebase.dll") -Force -ErrorAction SilentlyContinue
+    }
 }
 
 # 5. Add to User PATH in Registry (Permanent across all new terminals)
