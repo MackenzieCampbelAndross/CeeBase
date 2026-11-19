@@ -6,6 +6,10 @@
 #include <string_view>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "ceebase/buffer/buffer_pool_manager.hpp"
 #include "ceebase/catalog/catalog.hpp"
 #include "ceebase/common/byte_utils.hpp"
@@ -20,12 +24,26 @@
 
 namespace {
 
+void EnableVirtualTerminal() {
+#ifdef _WIN32
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE) {
+        DWORD dwMode = 0;
+        if (GetConsoleMode(hOut, &dwMode)) {
+            SetConsoleMode(hOut, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
+#endif
+}
+
 void PrintBanner() {
-    std::cout << "========================================================\n";
-    std::cout << " CeeBase: Relational Database Engine\n";
-    std::cout << " Version: " << ceebase::CEEBASE_VERSION_STRING << " (C++20)\n";
-    std::cout << " Storage: 4 KB Slotted Pages | B+ Tree | WAL | ACID\n";
-    std::cout << "========================================================\n\n";
+    EnableVirtualTerminal();
+    std::cout << "\033[1;36m"
+              << "  ┌────────────────────────────────────────────────────────────┐\n"
+              << "  │ \033[1;32m CeeBase \033[1;36m· High-Performance Relational Engine (C++20)       │\n"
+              << "  │  Version: \033[1;33m" << ceebase::CEEBASE_VERSION_STRING << "\033[1;36m       Storage: 4 KB Slotted Pages | WAL │\n"
+              << "  └────────────────────────────────────────────────────────────┘\n"
+              << "\033[0m\n";
 }
 
 void PrintUsage(std::string_view program_name) {
@@ -120,16 +138,16 @@ int HandleInteractiveShell(std::string_view db_name) {
 
     ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr, &recovery);
 
-    std::cout << "Connected to database: " << db_path.filename().string() << "\n";
-    std::cout << "Type SQL statements ending with ';' (or 'exit' / 'quit' to exit).\n";
-    std::cout << "Commands: SHOW TABLES; EXPLAIN <query>; BEGIN; COMMIT; ROLLBACK;\n\n";
+    EnableVirtualTerminal();
+    std::cout << "\033[1;32m●\033[0m Connected to: \033[1;37m" << db_path.filename().string() << "\033[0m\n";
+    std::cout << "Commands: \033[36mSHOW TABLES;\033[0m \033[33mBEGIN;\033[0m \033[32mCOMMIT;\033[0m \033[31mROLLBACK;\033[0m \033[35mEXPLAIN <sql>;\033[0m \033[90m'clear' | 'exit'\033[0m\n\n";
 
     std::string line_buffer;
     while (true) {
         if (line_buffer.empty()) {
-            std::cout << "ceebase> ";
+            std::cout << "\033[1;32mceebase❯\033[0m ";
         } else {
-            std::cout << "   -> ";
+            std::cout << "\033[33m   ↳ \033[0m";
         }
 
         std::string line;
@@ -145,16 +163,24 @@ int HandleInteractiveShell(std::string_view db_name) {
             break;
         }
 
+        if (trimmed == "clear" || trimmed == "cls") {
+            std::cout << "\033[2J\033[1;1H";
+            PrintBanner();
+            std::cout << "\033[1;32m●\033[0m Connected to: \033[1;37m" << db_path.filename().string() << "\033[0m\n\n";
+            line_buffer.clear();
+            continue;
+        }
+
         if (trimmed == "SHOW TABLES;" || trimmed == "show tables;" || trimmed == "SHOW TABLES" || trimmed == "show tables") {
             auto tables = catalog.GetAllTables();
-            std::cout << "+----------------------+\n";
-            std::cout << "| Tables               |\n";
-            std::cout << "+----------------------+\n";
+            std::cout << "\033[1;36m┌────────────────────────────────┐\033[0m\n";
+            std::cout << "\033[1;36m│\033[1;37m " << std::left << std::setw(30) << "Database Tables" << "\033[1;36m│\033[0m\n";
+            std::cout << "\033[1;36m├────────────────────────────────┤\033[0m\n";
             for (const auto* t : tables) {
-                std::cout << "| " << std::left << std::setw(20) << t->name << " |\n";
+                std::cout << "\033[1;36m│\033[0m " << std::left << std::setw(30) << t->name << "\033[1;36m│\033[0m\n";
             }
-            std::cout << "+----------------------+\n";
-            std::cout << tables.size() << " table(s) in database.\n\n";
+            std::cout << "\033[1;36m└────────────────────────────────┘\033[0m\n";
+            std::cout << "\033[32m" << tables.size() << " table(s) in database.\033[0m\n\n";
             line_buffer.clear();
             continue;
         }

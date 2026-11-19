@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ceebase": {
+      "command": "python",
+      "args": [
+        "D:\\Mac\\project\\NexusDB\\mcp\\server.py",
+        "D:\\Mac\\project\\NexusDB\\ceebase.cbdb"
+      ]
+    }
+  }
+}

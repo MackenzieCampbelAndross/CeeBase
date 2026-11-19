@@ -129,6 +129,18 @@ QueryResult ExecutionEngine::Execute(std::string_view sql) {
             if (!s.ok()) return QueryResult{false, s.ToString(), {}, {}, 0, elapsed, ""};
             return QueryResult{true, "", {}, {}, 0, elapsed, ""};
         }
+    } else if (upper_sql == "SHOW TABLES") {
+        if (catalog_) {
+            auto tables = catalog_->GetAllTables();
+            std::vector<std::string> cols = {"Table"};
+            std::vector<std::vector<std::string>> rows;
+            for (const auto* t : tables) {
+                rows.push_back({t->name});
+            }
+            auto end_time = std::chrono::high_resolution_clock::now();
+            double elapsed = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+            return QueryResult{true, "", std::move(cols), std::move(rows), rows.size(), elapsed, ""};
+        }
     }
 
     Lexer lexer(sql);

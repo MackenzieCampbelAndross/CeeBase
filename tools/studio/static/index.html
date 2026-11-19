@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CeeBase Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#10b981', 600: '#059669', 700: '#047857' },
+            dark: { 800: '#18181b', 850: '#121215', 900: '#09090b', 950: '#040405' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #121215; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+  </style>
+</head>
+<body class="bg-dark-900 text-zinc-100 flex flex-col h-screen overflow-hidden">
+
+  <!-- Top Navigation Bar -->
+  <header class="h-14 border-b border-zinc-800 bg-dark-850 px-5 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-sm">
+        CB
+      </div>
+      <div>
+        <h1 class="font-semibold text-sm tracking-wide flex items-center gap-2">
+          CeeBase Studio
+          <span class="text-xs font-mono font-normal bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">v1.0.0</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- DB Status Indicator -->
+    <div class="flex items-center gap-4 text-xs font-mono text-zinc-400">
+      <div class="flex items-center gap-2 bg-dark-900 border border-zinc-800 px-3 py-1.5 rounded-full">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-zinc-200">ceebase.cbdb</span>
+        <span class="text-zinc-500">|</span>
+        <span>4 KB Slotted Pages</span>
+        <span class="text-zinc-500">|</span>
+        <span class="text-emerald-400">WAL Active</span>
+      </div>
+      <button onclick="refreshAll()" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition font-sans text-xs">
+        ↻ Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Left Sidebar: Tables & Navigation -->
+    <aside class="w-64 border-r border-zinc-800 bg-dark-850 flex flex-col shrink-0">
+      <!-- Nav Tabs -->
+      <div class="p-3 border-b border-zinc-800 flex flex-col gap-1">
+        <button onclick="switchTab('table')" id="tab-btn-table" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-zinc-800 transition">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Table Browser
+        </button>
+        <button onclick="switchTab('sql')" id="tab-btn-sql" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          SQL Query Editor
+        </button>
+        <button onclick="switchTab('pages')" id="tab-btn-pages" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          4 KB Page Inspector
+        </button>
+      </div>
+
+      <!-- Tables Header -->
+      <div class="px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+        <span>Database Tables</span>
+        <button onclick="promptNewTable()" title="Create Table" class="text-zinc-400 hover:text-emerald-400 text-sm font-bold">+</button>
+      </div>
+
+      <!-- Tables List -->
+      <div id="tables-list" class="flex-1 overflow-y-auto px-2 space-y-1">
+        <div class="text-zinc-500 text-xs px-3 py-4 text-center">Loading tables...</div>
+      </div>
+
+      <div class="p-3 border-t border-zinc-800 text-[11px] text-zinc-500 font-mono flex justify-between">
+        <span>Disk: Little-Endian</span>
+        <span>Page: 4096 B</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col bg-dark-900 overflow-hidden">
+
+      <!-- VIEW 1: TABLE SPREADSHEET BROWSER -->
+      <section id="view-table" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Table Header Bar -->
+        <div class="h-14 border-b border-zinc-800 px-6 flex items-center justify-between shrink-0 bg-dark-850">
+          <div class="flex items-center gap-3">
+            <h2 id="current-table-title" class="font-semibold text-base text-zinc-100">Select a Table</h2>
+            <span id="current-table-count" class="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-mono">0 rows</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="promptInsertRow()" id="btn-insert-row" class="hidden px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white transition flex items-center gap-1.5 shadow-sm">
+              + Insert Row
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Grid Container -->
+        <div class="flex-1 overflow-auto p-6">
+          <div class="border border-zinc-800 rounded-lg overflow-hidden bg-dark-850 shadow-sm">
+            <table class="w-full text-left border-collapse" id="data-table">
+              <thead id="data-thead" class="bg-dark-900 border-b border-zinc-800 text-xs font-mono uppercase text-zinc-400">
+                <tr><th class="p-4">No table selected</th></tr>
+              </thead>
+              <tbody id="data-tbody" class="text-sm font-mono divide-y divide-zinc-800/60 text-zinc-200">
+                <tr><td class="p-6 text-center text-zinc-500 font-sans">Choose a table from the sidebar to view its records</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: SQL QUERY EDITOR -->
+      <section id="view-sql" class="flex-1 flex flex-col overflow-hidden hidden">
+        <div class="p-4 border-b border-zinc-800 bg-dark-850 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">SQL Statement</span>
+              <span class="text-xs text-zinc-500">(Press Ctrl+Enter or F5 to execute)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="sample-queries" onchange="applySampleQuery()" class="bg-dark-900 border border-zinc-700 text-xs text-zinc-300 rounded px-2.5 py-1">
+                <option value="">-- Load Sample Query --</option>
+                <option value="SELECT * FROM users ORDER BY id;">Select All Users</option>
+                <option value="SELECT name, balance FROM users WHERE balance > 100.00;">Filter Users (balance > 100)</option>
+                <option value="EXPLAIN SELECT * FROM users WHERE id = 1;">Explain Index Scan Plan</option>
+                <option value="SELECT COUNT(*), AVG(balance) FROM users;">Aggregate Statistics</option>
+              </select>
+              <button onclick="executeSql()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white rounded transition shadow">
+                ▶ Run Query
+              </button>
+            </div>
+          </div>
+          <textarea id="sql-input" rows="4" class="w-full bg-dark-900 border border-zinc-700 rounded-md p-3 font-mono text-sm text-zinc-100 focus:outline-none focus:border-indigo-500" placeholder="SELECT * FROM users;"></textarea>
+        </div>
+
+        <!-- Query Execution Diagnostics Bar -->
+        <div id="query-meta-bar" class="px-6 py-2 border-b border-zinc-800 bg-dark-900 text-xs font-mono text-zinc-400 flex items-center justify-between hidden">
+          <span id="query-meta-status" class="text-emerald-400">Query OK</span>
+          <div class="flex gap-4">
+            <span id="query-meta-rows">0 rows</span>
+            <span id="query-meta-time">0.000 ms</span>
+          </div>
+        </div>
+
+        <!-- Query Results Grid -->
+        <div class="flex-1 overflow-auto p-6">
+          <div class="border border-zinc-800 rounded-lg overflow-hidden bg-dark-850 shadow-sm">
+            <table class="w-full text-left border-collapse" id="sql-table">
+              <thead id="sql-thead" class="bg-dark-900 border-b border-zinc-800 text-xs font-mono uppercase text-zinc-400">
+                <tr><th class="p-4">Results</th></tr>
+              </thead>
+              <tbody id="sql-tbody" class="text-sm font-mono divide-y divide-zinc-800/60 text-zinc-200">
+                <tr><td class="p-6 text-center text-zinc-500 font-sans">Run a query to view results here</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: 4 KB SLOTTED PAGE INSPECTOR -->
+      <section id="view-pages" class="flex-1 flex flex-col overflow-hidden hidden p-6">
+        <div class="mb-4">
+          <h2 class="font-semibold text-lg text-zinc-100">Physical 4 KB Page Storage Inspector</h2>
+          <p class="text-xs text-zinc-400 mt-1">
+            Real-time inspection of 4,096-byte pages formatted directly inside <span class="font-mono text-emerald-400">ceebase.cbdb</span> on disk.
+          </p>
+        </div>
+        <div id="pages-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
+          <div class="text-zinc-500 text-xs">Loading page diagnostics...</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Client JavaScript Logic -->
+  <script>
+    let activeTab = 'table';
+    let currentTable = null;
+
+    function switchTab(tab) {
+      activeTab = tab;
+      ['table', 'sql', 'pages'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition";
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      activeBtn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-zinc-800 transition";
+
+      if (tab === 'pages') {
+        loadPageDiagnostics();
+      }
+    }
+
+    async function fetchJson(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        return await res.json();
+      } catch (err) {
+        console.error("Fetch error:", err);
+        return null;
+      }
+    }
+
+    async function loadTables() {
+      const tables = await fetchJson('/api/tables');
+      const container = document.getElementById('tables-list');
+      if (!tables || tables.length === 0) {
+        container.innerHTML = `<div class="text-zinc-500 text-xs px-3 py-4 text-center">No tables found.<br><button onclick="promptNewTable()" class="mt-2 text-emerald-400 hover:underline">Create Table</button></div>`;
+        return;
+      }
+
+      container.innerHTML = tables.map(t => `
+        <button onclick="selectTable('${t.name}')" class="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-mono text-zinc-300 hover:text-white hover:bg-zinc-800/70 transition ${currentTable === t.name ? 'bg-zinc-800 font-bold text-emerald-400' : ''}">
+          <span class="flex items-center gap-2 truncate">
+            <span class="text-zinc-500">#</span>
+            <span class="truncate">${t.name}</span>
+          </span>
+          <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${t.row_count}</span>
+        </button>
+      `).join('');
+
+      if (!currentTable && tables.length > 0) {
+        selectTable(tables[0].name);
+      }
+    }
+
+    async function selectTable(tableName) {
+      currentTable = tableName;
+      document.getElementById('current-table-title').innerText = tableName;
+      document.getElementById('btn-insert-row').classList.remove('hidden');
+
+      loadTables(); // re-render active highlight
+      const data = await fetchJson(`/api/table/${tableName}`);
+      renderTableData(data);
+    }
+
+    function renderTableData(data) {
+      const thead = document.getElementById('data-thead');
+      const tbody = document.getElementById('data-tbody');
+      const countBadge = document.getElementById('current-table-count');
+
+      if (!data || !data.success) {
+        tbody.innerHTML = `<tr><td class="p-6 text-center text-red-400 font-mono">Error: ${data ? data.error : 'Failed to load'}</td></tr>`;
+        return;
+      }
+
+      countBadge.innerText = `${data.rows.length} row(s)`;
+
+      if (data.columns.length === 0) {
+        thead.innerHTML = `<tr><th class="p-4">No Columns</th></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-center text-zinc-500">Empty Table</td></tr>`;
+        return;
+      }
+
+      thead.innerHTML = `<tr>${data.columns.map(c => `<th class="p-3.5 border-r border-zinc-800 last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
+
+      if (data.rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${data.columns.length}" class="p-8 text-center text-zinc-500">No records found. Click "+ Insert Row" above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.rows.map(row => `
+        <tr class="hover:bg-zinc-800/40 transition">
+          ${row.map(val => `<td class="p-3.5 border-r border-zinc-800/60 last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
+        </tr>
+      `).join('');
+    }
+
+    async function executeSql() {
+      const sql = document.getElementById('sql-input').value.trim();
+      if (!sql) return;
+
+      const metaBar = document.getElementById('query-meta-bar');
+      const metaStatus = document.getElementById('query-meta-status');
+      const metaRows = document.getElementById('query-meta-rows');
+      const metaTime = document.getElementById('query-meta-time');
+      const thead = document.getElementById('sql-thead');
+      const tbody = document.getElementById('sql-tbody');
+
+      metaBar.classList.remove('hidden');
+
+      const res = await fetchJson('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql })
+      });
+
+      if (!res.success) {
+        metaStatus.innerText = "Execution Failed";
+        metaStatus.className = "text-red-400 font-bold";
+        metaRows.innerText = "0 rows";
+        metaTime.innerText = `${res.elapsed_ms} ms`;
+        thead.innerHTML = `<tr><th class="p-4 text-red-400 font-mono">Error Output</th></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-red-300 font-mono bg-red-950/20">${res.error}</td></tr>`;
+        return;
+      }
+
+      metaStatus.innerText = "Query OK";
+      metaStatus.className = "text-emerald-400 font-bold";
+      metaRows.innerText = `${res.rows.length || res.rowcount} row(s) affected`;
+      metaTime.innerText = `${res.elapsed_ms} ms`;
+
+      if (res.columns.length === 0) {
+        thead.innerHTML = `<tr><th class="p-4">Execution Result</th></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-emerald-400 font-mono">Statement executed successfully. (${res.rowcount} row(s) affected)</td></tr>`;
+        loadTables();
+        return;
+      }
+
+      thead.innerHTML = `<tr>${res.columns.map(c => `<th class="p-3.5 border-r border-zinc-800 last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
+      tbody.innerHTML = res.rows.map(row => `
+        <tr class="hover:bg-zinc-800/40 transition">
+          ${row.map(val => `<td class="p-3.5 border-r border-zinc-800/60 last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
+        </tr>
+      `).join('');
+
+      loadTables();
+    }
+
+    async function loadPageDiagnostics() {
+      const container = document.getElementById('pages-container');
+      const pages = await fetchJson('/api/pages');
+      if (!pages || pages.length === 0) {
+        container.innerHTML = `<div class="text-zinc-500 text-xs">No pages found in database file.</div>`;
+        return;
+      }
+
+      container.innerHTML = pages.map(p => {
+        let badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/30";
+        if (p.type === 'HEADER_PAGE') badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+        if (p.type === 'CATALOG_PAGE') badgeColor = "bg-indigo-500/10 text-indigo-400 border-indigo-500/30";
+
+        return `
+          <div class="border border-zinc-800 bg-dark-850 rounded-lg p-4 flex flex-col justify-between shadow-sm">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-mono text-xs font-bold text-zinc-200">Page #${p.id}</span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded border ${badgeColor}">${p.type}</span>
+              </div>
+              <p class="text-xs font-mono text-zinc-400 break-all mb-3">${p.details}</p>
+            </div>
+            <div>
+              <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                <div class="bg-emerald-500 h-full" style="width: ${(p.allocated / 4096) * 100}%"></div>
+                <div class="bg-zinc-700 h-full" style="width: ${(p.free_space / 4096) * 100}%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-mono text-zinc-500 mt-1">
+                <span>Used: ${p.allocated} B</span>
+                <span>Free: ${p.free_space} B</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function promptNewTable() {
+      switchTab('sql');
+      document.getElementById('sql-input').value = "CREATE TABLE customers (id INTEGER PRIMARY KEY, email TEXT, credits DOUBLE);";
+    }
+
+    function promptInsertRow() {
+      if (!currentTable) return;
+      switchTab('sql');
+      document.getElementById('sql-input').value = `INSERT INTO ${currentTable} VALUES (10, 'Example Name', 100.00);`;
+    }
+
+    function applySampleQuery() {
+      const q = document.getElementById('sample-queries').value;
+      if (q) {
+        document.getElementById('sql-input').value = q;
+      }
+    }
+
+    function refreshAll() {
+      loadTables();
+      if (activeTab === 'pages') loadPageDiagnostics();
+      if (currentTable && activeTab === 'table') selectTable(currentTable);
+    }
+
+    // Keyboard shortcut: Ctrl+Enter or F5 to run SQL
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey && e.key === 'Enter') || e.key === 'F5') {
+        if (activeTab === 'sql') {
+          e.preventDefault();
+          executeSql();
+        }
+      }
+    });
+
+    // Initial Load
+    loadTables();
+  </script>
+</body>
+</html>

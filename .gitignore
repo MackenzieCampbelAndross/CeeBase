@@ -23,6 +23,14 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Java artifacts
+bindings/java/bin/
+*.class
+
+# Node.js artifacts
+node_modules/
+bindings/nodejs/node_modules/
+
 # Test artifacts and temporary DB files
 *.db
 *.cbdb

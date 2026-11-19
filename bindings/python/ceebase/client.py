@@ -126,6 +126,14 @@ class Cursor:
             err = self.lib.ceebase_errmsg(self.conn._db).decode("utf-8", errors="replace")
             raise Error(f"Execution failed: {err}")
 
+        # Populate column descriptions immediately
+        col_count = self.lib.ceebase_column_count(self._stmt)
+        if col_count > 0:
+            self.description = [
+                (self.lib.ceebase_column_name(self._stmt, i).decode("utf-8", errors="replace"),)
+                for i in range(col_count)
+            ]
+
         self.rowcount = self.lib.ceebase_changes(self.conn._db)
         return self
 
