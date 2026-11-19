@@ -1,0 +1,17 @@
+[package]
+name = "ceebase"
+version = "1.0.0"
+edition = "2021"
+authors = ["MackenzieCampbelAndross <mackenzieandross@gmail.com>"]
+description = "Official CLI and TUI for CeeBase database engine"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+ratatui = "0.29"
+crossterm = "0.28"
+indicatif = "0.17"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+libloading = "0.8"
+ureq = { version = "2.10", features = ["json"] }
+chrono = "0.4"

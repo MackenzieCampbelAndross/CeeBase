@@ -2,10 +2,33 @@
   "mcpServers": {
     "ceebase": {
       "command": "python",
-      "args": [
-        "D:\\Mac\\project\\NexusDB\\mcp\\server.py",
-        "D:\\Mac\\project\\NexusDB\\ceebase.cbdb"
-      ]
+      "args": ["mcp/server.py", "ceebase.cbdb"],
+      "env": {
+        "CEEBASE_AGENT_TOKEN": "cb_agent_readwrite_master_token"
+      }
     }
-  }
+  },
+  "agent_tokens": [
+    {
+      "token": "cb_agent_readwrite_master_token",
+      "agent_id": "agent-developer-master",
+      "org_id": "org-master",
+      "database": "ceebase.cbdb",
+      "scopes": ["read-only", "read-write", "admin"]
+    },
+    {
+      "token": "cb_agent_readonly_token",
+      "agent_id": "agent-analyst-readonly",
+      "org_id": "org-analytics",
+      "database": "ceebase.cbdb",
+      "scopes": ["read-only"]
+    },
+    {
+      "token": "cb_agent_tenant_acme_token",
+      "agent_id": "agent-acme-corp",
+      "org_id": "org-acme",
+      "database": "acme.cbdb",
+      "scopes": ["read-only", "read-write"]
+    }
+  ]
 }

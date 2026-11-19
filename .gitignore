@@ -41,3 +41,7 @@ test_output/
 
 *.egg-info/
 .pytest_cache/
+
+# Rust build artifacts
+target/
+tools/cli/target/
