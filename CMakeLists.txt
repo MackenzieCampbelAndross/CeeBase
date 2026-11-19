@@ -45,6 +45,9 @@ add_library(ceebase_core
     src/concurrency/transaction_manager.cpp
     src/recovery/recovery_engine.cpp
     src/execution/execution_engine.cpp
+    src/security/crypto.cpp
+    src/identity/identity_manager.cpp
+    src/identity/dedicated_deployment.cpp
     src/api/ceebase_c.cpp
 )
 
@@ -53,6 +56,10 @@ target_include_directories(ceebase_core PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 set_target_properties(ceebase_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(WIN32)
+    target_link_libraries(ceebase_core PUBLIC bcrypt)
+endif()
 
 # C ABI Dynamic Shared Library (ceebase.dll / libceebase.so)
 add_library(ceebase_shared SHARED

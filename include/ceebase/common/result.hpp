@@ -24,6 +24,9 @@ public:
         assert(!std::get<Status>(storage_).ok() && "Result failure constructor cannot accept Status::Ok");
     }
 
+    static Result<T> Success(T val) { return Result<T>(std::move(val)); }
+    static Result<T> Failure(Status status) { return Result<T>(std::move(status)); }
+
     [[nodiscard]] bool ok() const noexcept {
         return std::holds_alternative<T>(storage_);
     }

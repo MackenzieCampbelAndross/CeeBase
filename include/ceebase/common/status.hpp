@@ -17,6 +17,9 @@ enum class StatusCode : uint8_t {
     OutOfRange,
     BufferPoolExhausted,
     NotSupported,
+    Unauthorized,
+    PermissionDenied,
+    ResourceExhausted,
     Internal
 };
 
@@ -54,6 +57,15 @@ public:
     }
     [[nodiscard]] static Status NotSupported(std::string message) {
         return Status(StatusCode::NotSupported, std::move(message));
+    }
+    [[nodiscard]] static Status Unauthorized(std::string message) {
+        return Status(StatusCode::Unauthorized, std::move(message));
+    }
+    [[nodiscard]] static Status PermissionDenied(std::string message) {
+        return Status(StatusCode::PermissionDenied, std::move(message));
+    }
+    [[nodiscard]] static Status ResourceExhausted(std::string message) {
+        return Status(StatusCode::ResourceExhausted, std::move(message));
     }
     [[nodiscard]] static Status Internal(std::string message) {
         return Status(StatusCode::Internal, std::move(message));

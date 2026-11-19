@@ -24,6 +24,12 @@ std::string_view StatusCodeToString(StatusCode code) noexcept {
             return "BUFFER_POOL_EXHAUSTED";
         case StatusCode::NotSupported:
             return "NOT_SUPPORTED";
+        case StatusCode::Unauthorized:
+            return "UNAUTHORIZED";
+        case StatusCode::PermissionDenied:
+            return "PERMISSION_DENIED";
+        case StatusCode::ResourceExhausted:
+            return "RESOURCE_EXHAUSTED";
         case StatusCode::Internal:
             return "INTERNAL_ERROR";
         default:
