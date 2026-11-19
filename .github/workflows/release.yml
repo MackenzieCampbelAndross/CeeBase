@@ -1,0 +1,58 @@
+name: Release CeeBase Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Release - ${{ matrix.os }} (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: ceebase.exe
+            package_name: ceebase-windows-x64.zip
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: ceebase
+            package_name: ceebase-linux-x64.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: ceebase
+            package_name: ceebase-darwin-arm64.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build CeeBase CLI
+        run: cargo build --release --manifest-path tools/cli/Cargo.toml --target ${{ matrix.target }}
+
+      - name: Package Artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "tools/cli/target/${{ matrix.target }}/release/ceebase.exe" -DestinationPath "${{ matrix.package_name }}"
+
+      - name: Package Artifact (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          tar -czf "${{ matrix.package_name }}" -C "tools/cli/target/${{ matrix.target }}/release" ceebase
+
+      - name: Upload Package to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.package_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

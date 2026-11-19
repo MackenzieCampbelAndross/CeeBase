@@ -11,6 +11,30 @@ It implements its own persistent storage engine, fixed 4 KB slotted database pag
 
 ---
 
+## Quick Install
+
+Install the official CeeBase CLI with a single command:
+
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/MackenzieCampbelAndross/CeeBase/main/scripts/install.ps1 | iex
+```
+*(Or from a cloned repository: run `.\install.bat`)*
+
+### macOS & Linux
+```bash
+curl -fsSL https://raw.githubusercontent.com/MackenzieCampbelAndross/CeeBase/main/scripts/install.sh | bash
+```
+
+### Run CeeBase
+Once installed, open any terminal and type:
+```bash
+ceebase
+```
+This immediately launches the interactive Pastel TUI on `ceebase.cbdb`.
+
+---
+
 ## Key Features
 
 - **Zero External Engine Dependencies**: Implements disk I/O, buffer cache, B+ Tree, parser, and execution engine independently. No SQLite, PostgreSQL, or third-party engines.
