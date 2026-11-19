@@ -33,11 +33,17 @@ struct IndexMetadata {
 
 class Catalog {
 public:
-    explicit Catalog(BufferPoolManager* bpm) : bpm_(bpm) {}
-    ~Catalog() = default;
+    static constexpr uint32_t CATALOG_MAGIC = 0x43415430; // "CAT0"
+    static constexpr uint16_t CATALOG_VERSION = 1;
+
+    explicit Catalog(BufferPoolManager* bpm);
+    ~Catalog();
 
     Catalog(const Catalog&) = delete;
     Catalog& operator=(const Catalog&) = delete;
+
+    Status SaveCatalog();
+    Status LoadCatalog();
 
     // Table Management
     Result<TableMetadata*> CreateTable(std::string name, Schema schema, std::string primary_key = "");
@@ -54,6 +60,9 @@ public:
     Status DropIndex(std::string_view index_name);
 
 private:
+    Status SaveCatalogInternal();
+    Status LoadCatalogInternal(page_id_t root_id);
+
     BufferPoolManager* bpm_;
     uint32_t next_table_id_{1};
     uint32_t next_index_id_{1};

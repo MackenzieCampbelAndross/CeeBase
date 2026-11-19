@@ -22,10 +22,41 @@ struct QueryResult {
     bool success{false};
     std::string error_message{};
     std::vector<std::string> column_names{};
+    std::vector<DataType> column_types{};
     std::vector<std::vector<std::string>> rows{};
+    std::vector<std::vector<bool>> null_indicators{};
     size_t rows_affected{0};
     double execution_time_ms{0.0};
     std::string explain_output{};
+
+    QueryResult() = default;
+
+    // Backward-compatible constructor
+    QueryResult(bool s, std::string err, std::vector<std::string> cols,
+                std::vector<std::vector<std::string>> r, size_t affected = 0,
+                double elapsed = 0.0, std::string explain = "")
+        : success(s), error_message(std::move(err)), column_names(std::move(cols)),
+          rows(std::move(r)), rows_affected(affected), execution_time_ms(elapsed),
+          explain_output(std::move(explain)) {
+        column_types.assign(column_names.size(), DataType::TEXT);
+        null_indicators.resize(rows.size());
+        for (size_t i = 0; i < rows.size(); ++i) {
+            null_indicators[i].assign(rows[i].size(), false);
+            for (size_t j = 0; j < rows[i].size(); ++j) {
+                if (rows[i][j] == "NULL") null_indicators[i][j] = true;
+            }
+        }
+    }
+
+    // Full constructor with types and null indicators
+    QueryResult(bool s, std::string err, std::vector<std::string> cols,
+                std::vector<DataType> types, std::vector<std::vector<std::string>> r,
+                std::vector<std::vector<bool>> nulls, size_t affected = 0,
+                double elapsed = 0.0, std::string explain = "")
+        : success(s), error_message(std::move(err)), column_names(std::move(cols)),
+          column_types(std::move(types)), rows(std::move(r)),
+          null_indicators(std::move(nulls)), rows_affected(affected),
+          execution_time_ms(elapsed), explain_output(std::move(explain)) {}
 
     void Format(std::ostream& os) const;
 };

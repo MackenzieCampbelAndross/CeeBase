@@ -113,10 +113,13 @@ TEST_F(RecoveryTest, CrashRecoveryUncommittedTransactionRollback) {
         ASSERT_TRUE(dm.OpenDatabase(db_path_).ok());
         BufferPoolManager bpm(10, &dm);
         Catalog catalog(&bpm);
-        std::vector<Column> cols;
-        cols.emplace_back("id", DataType::INTEGER, false);
-        cols.emplace_back("val", DataType::DOUBLE, false);
-        auto* tbl = catalog.RegisterExistingTable("vault", Schema(std::move(cols)), vault_root_page).value();
+        TableMetadata* tbl = catalog.GetTable("vault");
+        if (!tbl) {
+            std::vector<Column> cols;
+            cols.emplace_back("id", DataType::INTEGER, false);
+            cols.emplace_back("val", DataType::DOUBLE, false);
+            tbl = catalog.RegisterExistingTable("vault", Schema(std::move(cols)), vault_root_page).value();
+        }
 
         LogManager log_mgr(wal_path_);
         RecoveryEngine recovery(&log_mgr, &bpm, &catalog);

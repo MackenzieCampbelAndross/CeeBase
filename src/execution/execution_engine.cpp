@@ -287,7 +287,14 @@ QueryResult ExecutionEngine::ExecuteInsert(const InsertStatement* stmt) {
                 int64_t k = 0;
                 if (key_val.GetType() == DataType::INTEGER) k = key_val.GetInteger();
                 else if (key_val.GetType() == DataType::BIGINT) k = key_val.GetBigInt();
-                (void)idx_meta->index->Insert(k, rid);
+                Status s = idx_meta->index->Insert(k, rid);
+                if (!s.ok()) {
+                    if (autocommit && txn_mgr_) {
+                        (void)txn_mgr_->Abort(active_txn_.get());
+                        active_txn_.reset();
+                    }
+                    return QueryResult{false, "Index insertion failure: " + s.ToString(), {}, {}, rows_inserted, 0.0, ""};
+                }
             }
         }
 
@@ -423,6 +430,7 @@ QueryResult ExecutionEngine::ExecuteSelect(const SelectStatement* stmt) {
 
     // Prepare Output Schema & Columns
     std::vector<std::string> output_headers;
+    std::vector<DataType> output_types;
     bool is_select_star = (stmt->GetSelectList().size() == 1 &&
                            stmt->GetSelectList()[0]->GetType() == ExprType::COLUMN_REF &&
                            static_cast<const ColumnRefExpr*>(stmt->GetSelectList()[0].get())->GetColumnName() == "*");
@@ -431,34 +439,61 @@ QueryResult ExecutionEngine::ExecuteSelect(const SelectStatement* stmt) {
     if (is_select_star) {
         for (const auto& col : cur_schema.GetColumns()) {
             output_headers.push_back(col.GetName());
+            output_types.push_back(col.GetType());
         }
     } else {
         for (const auto& e : stmt->GetSelectList()) {
             output_headers.push_back(e->ToString());
+            if (e->GetType() == ExprType::COLUMN_REF) {
+                auto* col_ref = static_cast<const ColumnRefExpr*>(e.get());
+                int idx = cur_schema.GetColumnIndex(col_ref->GetColumnName());
+                if (idx != -1) {
+                    output_types.push_back(cur_schema.GetColumn(static_cast<size_t>(idx)).GetType());
+                } else {
+                    output_types.push_back(DataType::TEXT);
+                }
+            } else if (e->GetType() == ExprType::AGGREGATE) {
+                auto* agg = static_cast<const AggregateExpr*>(e.get());
+                if (agg->GetAggregateType() == AggregateType::COUNT) {
+                    output_types.push_back(DataType::BIGINT);
+                } else {
+                    output_types.push_back(DataType::DOUBLE);
+                }
+            } else {
+                output_types.push_back(DataType::TEXT);
+            }
         }
     }
 
     // Materialize Rows
     std::vector<std::vector<std::string>> result_rows;
+    std::vector<std::vector<bool>> null_indicators;
     Tuple row_tuple;
     RID row_rid;
 
     while (root_executor->Next(&row_tuple, &row_rid)) {
         std::vector<std::string> row_strings;
+        std::vector<bool> row_nulls;
         if (is_select_star) {
             for (size_t i = 0; i < cur_schema.GetColumnCount(); ++i) {
-                row_strings.push_back(row_tuple.GetValue(cur_schema, i).ToString());
+                Value val = row_tuple.GetValue(cur_schema, i);
+                row_nulls.push_back(val.IsNull());
+                row_strings.push_back(val.ToString());
             }
         } else {
             for (const auto& e : stmt->GetSelectList()) {
                 Value v = ExpressionEvaluator::Evaluate(e.get(), &row_tuple, &cur_schema);
+                row_nulls.push_back(v.IsNull());
                 row_strings.push_back(v.ToString());
             }
         }
         result_rows.push_back(std::move(row_strings));
+        null_indicators.push_back(std::move(row_nulls));
     }
 
-    return QueryResult{true, "", std::move(output_headers), std::move(result_rows), result_rows.size(), 0.0, ""};
+    return QueryResult{true, "", std::move(output_headers), std::move(output_types),
+                       std::move(result_rows), std::move(null_indicators),
+                       result_rows.size(), 0.0, ""};
 }
 
 QueryResult ExecutionEngine::ExecuteUpdate(const UpdateStatement* stmt) {
@@ -585,8 +620,22 @@ QueryResult ExecutionEngine::ExecuteUpdate(const UpdateStatement* stmt) {
                 int64_t old_k = (old_val.GetType() == DataType::INTEGER) ? old_val.GetInteger() : old_val.GetBigInt();
                 int64_t new_k = (new_val.GetType() == DataType::INTEGER) ? new_val.GetInteger() : new_val.GetBigInt();
                 if (old_k != new_k) {
-                    (void)idx_meta->index->Remove(old_k);
-                    (void)idx_meta->index->Insert(new_k, cur_tuple.GetRID());
+                    Status rem_s = idx_meta->index->Remove(old_k);
+                    if (!rem_s.ok()) {
+                        if (autocommit && txn_mgr_) {
+                            (void)txn_mgr_->Abort(active_txn_.get());
+                            active_txn_.reset();
+                        }
+                        return QueryResult{false, "Index update (remove) failure: " + rem_s.ToString(), {}, {}, rows_updated, 0.0, ""};
+                    }
+                    Status ins_s = idx_meta->index->Insert(new_k, cur_tuple.GetRID());
+                    if (!ins_s.ok()) {
+                        if (autocommit && txn_mgr_) {
+                            (void)txn_mgr_->Abort(active_txn_.get());
+                            active_txn_.reset();
+                        }
+                        return QueryResult{false, "Index update (insert) failure: " + ins_s.ToString(), {}, {}, rows_updated, 0.0, ""};
+                    }
                 }
             }
         }
@@ -707,7 +756,14 @@ QueryResult ExecutionEngine::ExecuteDelete(const DeleteStatement* stmt) {
             if (col_idx != -1) {
                 Value key_val = cur_tuple.GetValue(tbl->schema, static_cast<size_t>(col_idx));
                 int64_t k = (key_val.GetType() == DataType::INTEGER) ? key_val.GetInteger() : key_val.GetBigInt();
-                (void)idx_meta->index->Remove(k);
+                Status rem_s = idx_meta->index->Remove(k);
+                if (!rem_s.ok()) {
+                    if (autocommit && txn_mgr_) {
+                        (void)txn_mgr_->Abort(active_txn_.get());
+                        active_txn_.reset();
+                    }
+                    return QueryResult{false, "Index deletion failure: " + rem_s.ToString(), {}, {}, rows_deleted, 0.0, ""};
+                }
             }
         }
 

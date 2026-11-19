@@ -143,6 +143,21 @@ void DiskManager::Close() {
     CloseInternal();
 }
 
+Status DiskManager::SetCatalogRootPageId(page_id_t root_id) {
+    std::lock_guard<std::mutex> guard(db_io_latch_);
+    header_.catalog_root_page_id = root_id;
+    Status s = WriteHeaderPage();
+    if (!s.ok()) {
+        return s;
+    }
+    return (db_file_ != nullptr) ? os::SyncFile(db_file_) : Status::Ok();
+}
+
+page_id_t DiskManager::GetCatalogRootPageId() const noexcept {
+    std::lock_guard<std::mutex> guard(db_io_latch_);
+    return header_.catalog_root_page_id;
+}
+
 void DiskManager::CloseInternal() {
     if (db_file_ != nullptr) {
         (void)os::SyncFile(db_file_);

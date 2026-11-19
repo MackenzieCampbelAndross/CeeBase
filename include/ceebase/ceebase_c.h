@@ -56,6 +56,7 @@ CEEBASE_API int ceebase_finalize(ceebase_stmt* stmt);
 CEEBASE_API int ceebase_column_count(ceebase_stmt* stmt);
 CEEBASE_API const char* ceebase_column_name(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API int ceebase_column_type(ceebase_stmt* stmt, int col_idx);
+CEEBASE_API int ceebase_column_is_null(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API int32_t ceebase_column_int(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API int64_t ceebase_column_int64(ceebase_stmt* stmt, int col_idx);
 CEEBASE_API double ceebase_column_double(ceebase_stmt* stmt, int col_idx);

@@ -40,10 +40,9 @@ TEST_F(TransactionStressTest, HighVolumeTransactionalCrudWithSmallBufferPool) {
     ASSERT_TRUE(dm.CreateDatabase(db_path_).ok());
 
     // Very small buffer pool (5 frames) under high write volume forces constant eviction
-    BufferPoolManager bpm(5, &dm);
-    Catalog catalog(&bpm);
     LogManager log_mgr(wal_path_);
-    bpm.SetLogManager(&log_mgr);
+    BufferPoolManager bpm(5, &dm, &log_mgr);
+    Catalog catalog(&bpm);
     TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
     ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 
@@ -113,10 +112,9 @@ TEST_F(TransactionStressTest, LargeTuplesSpanningManyPages) {
     DiskManager dm;
     ASSERT_TRUE(dm.CreateDatabase(db_path_).ok());
 
-    BufferPoolManager bpm(6, &dm);
-    Catalog catalog(&bpm);
     LogManager log_mgr(wal_path_);
-    bpm.SetLogManager(&log_mgr);
+    BufferPoolManager bpm(6, &dm, &log_mgr);
+    Catalog catalog(&bpm);
     TransactionManager txn_mgr(&log_mgr, &bpm, &catalog);
     ExecutionEngine engine(&bpm, &catalog, &txn_mgr);
 

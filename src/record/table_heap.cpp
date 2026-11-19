@@ -50,7 +50,7 @@ Status TableHeap::InsertTuple(const Tuple& tuple, RID* rid) {
 
         // Current page is full, advance to next page in chain
         page_id_t next_page_id = slotted.GetNextPageId();
-        if (next_page_id != INVALID_PAGE_ID) {
+        if (next_page_id != INVALID_PAGE_ID && next_page_id != 0 && next_page_id != cur_page_id) {
             (void)bpm_->UnpinPage(cur_page_id, false);
             cur_page_id = next_page_id;
             continue;
@@ -212,6 +212,9 @@ void TableIterator::AdvanceToNextValid() {
         // Advanced past all slots in this page; proceed to next page
         page_id_t next_page_id = slotted.GetNextPageId();
         (void)heap_->bpm_->UnpinPage(current_rid_.page_id, false);
+        if (next_page_id == INVALID_PAGE_ID || next_page_id == 0 || next_page_id == current_rid_.page_id) {
+            break;
+        }
         current_rid_.page_id = next_page_id;
         current_rid_.slot_id = 0;
     }

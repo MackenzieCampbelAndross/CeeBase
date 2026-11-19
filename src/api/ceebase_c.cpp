@@ -82,7 +82,14 @@ CEEBASE_API int ceebase_open(const char* filename, ceebase_db** db_out) {
                                                              db->catalog.get());
 
     // Run crash recovery
-    (void)db->recovery->Recover();
+    auto rec_status = db->recovery->Recover();
+    if (!rec_status.ok()) {
+        db->last_error = rec_status.ToString();
+        if (db->disk_mgr) {
+            db->disk_mgr->Close();
+        }
+        return CEEBASE_ERROR;
+    }
 
     db->engine = std::make_unique<ceebase::ExecutionEngine>(db->bpm.get(),
                                                             db->catalog.get(),
@@ -98,15 +105,29 @@ CEEBASE_API int ceebase_close(ceebase_db* db) {
         return CEEBASE_OK;
     }
 
+    int rc = CEEBASE_OK;
+    if (db->catalog) {
+        auto cs = db->catalog->SaveCatalog();
+        if (!cs.ok()) {
+            rc = CEEBASE_ERROR;
+        }
+    }
     if (db->bpm) {
-        (void)db->bpm->FlushAllPages();
+        auto fs = db->bpm->FlushAllPages();
+        if (!fs.ok()) {
+            rc = CEEBASE_ERROR;
+        }
     }
     if (db->disk_mgr) {
+        auto ss = db->disk_mgr->Sync();
+        if (!ss.ok()) {
+            rc = CEEBASE_ERROR;
+        }
         db->disk_mgr->Close();
     }
 
     delete db;
-    return CEEBASE_OK;
+    return rc;
 }
 
 CEEBASE_API const char* ceebase_errmsg(ceebase_db* db) {
@@ -202,9 +223,38 @@ CEEBASE_API const char* ceebase_column_name(ceebase_stmt* stmt, int col_idx) {
 }
 
 CEEBASE_API int ceebase_column_type(ceebase_stmt* stmt, int col_idx) {
-    (void)stmt;
-    (void)col_idx;
+    if (!stmt || col_idx < 0 || static_cast<size_t>(col_idx) >= stmt->result.column_names.size()) {
+        return CEEBASE_TYPE_NULL;
+    }
+    // Check if current row has NULL for this column
+    if (stmt->current_row > 0) {
+        size_t row_idx = stmt->current_row - 1;
+        if (row_idx < stmt->result.null_indicators.size() &&
+            static_cast<size_t>(col_idx) < stmt->result.null_indicators[row_idx].size() &&
+            stmt->result.null_indicators[row_idx][static_cast<size_t>(col_idx)]) {
+            return CEEBASE_TYPE_NULL;
+        }
+    }
+    if (static_cast<size_t>(col_idx) < stmt->result.column_types.size()) {
+        switch (stmt->result.column_types[static_cast<size_t>(col_idx)]) {
+            case ceebase::DataType::INTEGER: return CEEBASE_TYPE_INTEGER;
+            case ceebase::DataType::BIGINT:  return CEEBASE_TYPE_BIGINT;
+            case ceebase::DataType::FLOAT:   return CEEBASE_TYPE_FLOAT;
+            case ceebase::DataType::DOUBLE:  return CEEBASE_TYPE_DOUBLE;
+            case ceebase::DataType::BOOLEAN: return CEEBASE_TYPE_BOOLEAN;
+            case ceebase::DataType::TEXT:    return CEEBASE_TYPE_TEXT;
+            default:                         return CEEBASE_TYPE_TEXT;
+        }
+    }
     return CEEBASE_TYPE_TEXT;
+}
+
+CEEBASE_API int ceebase_column_is_null(ceebase_stmt* stmt, int col_idx) {
+    if (!stmt || stmt->current_row == 0 || col_idx < 0) return 1;
+    size_t row_idx = stmt->current_row - 1;
+    if (row_idx >= stmt->result.null_indicators.size()) return 0;
+    if (static_cast<size_t>(col_idx) >= stmt->result.null_indicators[row_idx].size()) return 0;
+    return stmt->result.null_indicators[row_idx][static_cast<size_t>(col_idx)] ? 1 : 0;
 }
 
 CEEBASE_API int32_t ceebase_column_int(ceebase_stmt* stmt, int col_idx) {

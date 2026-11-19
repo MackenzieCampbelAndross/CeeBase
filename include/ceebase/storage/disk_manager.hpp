@@ -48,6 +48,8 @@ public:
     [[nodiscard]] const std::filesystem::path& GetFilePath() const noexcept { return file_path_; }
     [[nodiscard]] uint32_t GetNumPages() const noexcept { return num_pages_; }
     [[nodiscard]] const DatabaseHeader& GetHeader() const noexcept { return header_; }
+    Status SetCatalogRootPageId(page_id_t root_id);
+    [[nodiscard]] page_id_t GetCatalogRootPageId() const noexcept;
 
     // Page Block I/O Operations (4096-byte fixed blocks)
     Status ReadPage(page_id_t page_id, uint8_t* page_data);

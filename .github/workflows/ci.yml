@@ -2,9 +2,9 @@ name: CeeBase CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ceebase/production-roadmap ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, ceebase/production-roadmap ]
 
 jobs:
   build-and-test-linux:
@@ -63,10 +63,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure CMake
-        run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCEEBASE_BUILD_TESTS=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCEEBASE_BUILD_TESTS=ON
 
       - name: Build
         run: cmake --build build --config Debug

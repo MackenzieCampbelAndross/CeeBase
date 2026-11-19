@@ -133,7 +133,9 @@ int HandleInteractiveShell(std::string_view db_name) {
     // Run crash recovery on open
     auto rec_status = recovery.Recover();
     if (!rec_status.ok()) {
-        std::cerr << "Warning: Recovery notice: " << rec_status.ToString() << "\n";
+        std::cerr << "Fatal: Crash recovery failed: " << rec_status.ToString() << "\n";
+        dm.Close();
+        return 1;
     }
 
     ceebase::ExecutionEngine engine(&bpm, &catalog, &txn_mgr, &recovery);
@@ -195,7 +197,12 @@ int HandleInteractiveShell(std::string_view db_name) {
     }
 
     std::cout << "\nFlushing database pages and closing connection...\n";
-    (void)bpm.FlushAllPages();
+    (void)catalog.SaveCatalog();
+    auto flush_status = bpm.FlushAllPages();
+    if (!flush_status.ok()) {
+        std::cerr << "Warning: Failed to flush pages to disk: " << flush_status.ToString() << "\n";
+    }
+    (void)dm.Sync();
     dm.Close();
     std::cout << "Goodbye.\n";
     return 0;

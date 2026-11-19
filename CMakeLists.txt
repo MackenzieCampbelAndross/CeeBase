@@ -52,6 +52,7 @@ target_include_directories(ceebase_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+set_target_properties(ceebase_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # C ABI Dynamic Shared Library (ceebase.dll / libceebase.so)
 add_library(ceebase_shared SHARED

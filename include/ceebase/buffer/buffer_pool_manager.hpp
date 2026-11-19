@@ -52,6 +52,16 @@ public:
     [[nodiscard]] size_t GetNumFreeFrames() const;
     [[nodiscard]] bool IsPageInPool(page_id_t page_id) const;
 
+    // Catalog Root Management
+    Status SetCatalogRootPageId(page_id_t root_id) {
+        if (!disk_manager_) return Status::InvalidArgument("BPM: DiskManager is null");
+        return disk_manager_->SetCatalogRootPageId(root_id);
+    }
+    [[nodiscard]] page_id_t GetCatalogRootPageId() const noexcept {
+        if (!disk_manager_) return INVALID_PAGE_ID;
+        return disk_manager_->GetCatalogRootPageId();
+    }
+
 private:
     bool FindAvailableFrame(frame_id_t* frame_id);
 
