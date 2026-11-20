@@ -337,10 +337,14 @@ function version() {
     return ceebase_version();
 }
 
+const sdk = require('../../sdk/javascript/index.js');
+
 module.exports = {
     connect,
     open: connect,
     version,
+    createClient: sdk.createClient,
+    CeeBaseClient: sdk.CeeBaseClient,
     Connection,
     PreparedStatement,
     ConnectionPool,

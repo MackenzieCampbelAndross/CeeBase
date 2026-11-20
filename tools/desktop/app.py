@@ -20,11 +20,15 @@ BINDINGS_DIR = REPO_ROOT / "bindings" / "python"
 sys.path.insert(0, str(STUDIO_DIR))
 sys.path.insert(0, str(BINDINGS_DIR))
 
+from src.platform.gateway import GatewayHandler, PlatformManager
 import server
 
 def run_embedded_server():
     backend = server.StudioBackend("ceebase.cbdb")
+    platform = PlatformManager()
+    GatewayHandler.platform = platform
     server.StudioHandler.backend = backend
+    server.StudioHandler.platform = platform
     port = 8080
     for attempt in range(10):
         try:

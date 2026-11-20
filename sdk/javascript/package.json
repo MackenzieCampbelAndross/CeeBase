@@ -1,0 +1,22 @@
+{
+  "name": "@ceebase/sdk",
+  "version": "1.0.0",
+  "description": "Official JavaScript & TypeScript client SDK for CeeBase Platform (Database, Auth, Storage, Functions, Realtime)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "node --test tests/sdk.test.js"
+  },
+  "keywords": [
+    "ceebase",
+    "sdk",
+    "baas",
+    "database",
+    "auth",
+    "storage",
+    "functions",
+    "realtime"
+  ],
+  "author": "MackenzieCampbelAndross <mackenzieandross@gmail.com>",
+  "license": "Apache-2.0"
+}

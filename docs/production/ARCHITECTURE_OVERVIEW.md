@@ -1,48 +1,51 @@
 # CeeBase Master Architectural Specification
 
-CeeBase is a high-performance, ACID-compliant database platform written in modern C++20 with a modular architecture supporting embedded local usage, network server access, multi-tenant cloud hosting, and AI agent integration.
+CeeBase is an independent open-source database and Backend as a Service (BaaS) platform built around our own C++20 relational database engine. Supabase packages PostgreSQL into a developer backend platform; CeeBase packages CeeBase into a complete developer backend platform.
 
 ---
 
 ## 1. System Architecture
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CeeBase Developer Interfaces                    │
-│   Rust CLI (TUI)  │  Python DB-API  │  Node.js FFI  │  Java FFM  │ MCP │
-└─────────┬───────────────────┬───────────────┬─────────────┬───────┬────┘
-          │                   │               │             │       │
-          ▼                   ▼               ▼             ▼       ▼
-┌──────────────────┐  ┌──────────────────────────────────────────────────┐
-│ Cloud Control    │  │                   C API                          │
-│ Plane (Managed)  │  │   (ceebase_open, ceebase_prepare, ceebase_step)   │
-└─────────┬────────┘  └───────────────────────┬──────────────────────────┘
-          │                                   │
-          ▼                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CeeBase Engine Kernel                           │
-│                                                                        │
-│   ┌─────────────────────┐                 ┌────────────────────────┐   │
-│   │   SQL Lexer &       │                 │   Execution Engine     │   │
-│   │   Recursive Parser  │ ──────────────> │   (Volcano Iterator)   │   │
-│   └─────────────────────┘                 └───────────┬────────────┘   │
-│                                                       │                │
-│   ┌─────────────────────┐                 ┌───────────▼────────────┐   │
-│   │  Catalog Manager    │                 │   Table Heap &         │   │
-│   │  (Persistent Root)  │                 │   B+ Tree Indexes      │   │
-│   └─────────────────────┘                 └───────────┬────────────┘   │
-│                                                       │                │
-│   ┌─────────────────────┐                 ┌───────────▼────────────┐   │
-│   │ Transaction Manager │                 │   Buffer Pool Manager  │   │
-│   │ & Recovery Engine   │ <─────────────> │   (LRU Page Replacer)  │   │
-│   └──────────┬──────────┘                 └───────────┬────────────┘   │
-│              │                                        │                │
-│              ▼                                        ▼                │
-│   ┌─────────────────────┐                 ┌────────────────────────┐   │
-│   │ Log Manager (WAL)   │                 │   Disk Manager         │   │
-│   │ (Append-Only Log)   │                 │   (Fixed 4096-B Pages) │   │
-│   └─────────────────────┘                 └────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
+```text
+                 DEVELOPER APPLICATIONS
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+     CEEBASE CLI     CEEBASE STUDIO   CEEBASE DESKTOP
+   (Rust / Terminal)  (Web / Browser) (Native Window)
+          │                │                │
+          └────────────────┼────────────────┘
+                           │
+             OFFICIAL SDKS (@ceebase/sdk, Python)
+                           │
+                     API GATEWAY
+               (/auth, /rest, /storage, /functions, /realtime)
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+    CONTROL PLANE     PROJECT SERVICES   MANAGEMENT
+          │                │                │
+    Organizations    Database API (REST) Monitoring
+    Projects         Authentication      Audit Logs
+    Provisioning     Authorization & RLS Metrics
+    Credentials      Object Storage      Backups
+    Metering         Realtime Changefeed Replication
+                     Edge Functions
+                           │
+                     PROJECT ROUTER
+                           │
+               ┌───────────┼───────────┐
+               │           │           │
+           PROJECT A   PROJECT B   PROJECT C
+               │           │           │
+            CEEBASE     CEEBASE     CEEBASE
+            DATABASE    DATABASE    DATABASE
+          (Engine C++) (Engine C++) (Engine C++)
+               │           │           │
+               └───────────┼───────────┘
+                           │
+               INFRASTRUCTURE & PERSISTENCE
+               (Slotted Pages, WAL, B+ Trees)
 ```
 
 ---

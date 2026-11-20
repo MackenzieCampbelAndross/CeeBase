@@ -16,6 +16,7 @@ from .client import (
     paramstyle,
     connect
 )
+from .sdk import create_client, CeeBaseClient
 
 __version__ = "1.0.0"
 __all__ = [
@@ -29,5 +30,7 @@ __all__ = [
     "apilevel",
     "threadsafety",
     "paramstyle",
-    "connect"
+    "connect",
+    "create_client",
+    "CeeBaseClient"
 ]

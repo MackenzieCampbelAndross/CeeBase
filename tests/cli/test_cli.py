@@ -145,6 +145,40 @@ class TestCeebaseCLI(unittest.TestCase):
         proc = self.run_cmd(["query", "SELECT * INVALID SQL SYNTAX;", "-d", self.test_db], expect_success=False)
         self.assertNotEqual(proc.returncode, 0)
 
+    def test_10_platform_subcommands(self):
+        # 1. Doctor
+        proc = self.run_cmd(["doctor"])
+        self.assertIn("CeeBase Platform System Doctor", proc.stdout)
+
+        # 2. Projects
+        proc = self.run_cmd(["projects", "list"])
+        self.assertIn("Project ID", proc.stdout)
+
+        # 3. Auth Providers
+        proc = self.run_cmd(["auth", "providers"])
+        self.assertIn("Email / Password", proc.stdout)
+
+        # 4. Migration Status & Create
+        proc = self.run_cmd(["migration", "status"])
+        self.assertIn("Migration Status", proc.stdout)
+
+        proc = self.run_cmd(["migration", "create", "add_team_members"])
+        self.assertIn("Created migration file", proc.stdout)
+
+        # 5. Secrets
+        proc = self.run_cmd(["secrets", "list"])
+        self.assertIn("Secrets configured", proc.stdout)
+
+        # 6. Storage
+        proc = self.run_cmd(["storage", "buckets"])
+
+        # 7. Deploy & Logs
+        proc = self.run_cmd(["deploy"])
+        self.assertIn("Deployment complete", proc.stdout)
+
+        proc = self.run_cmd(["logs"])
+        self.assertIn("platform logs", proc.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

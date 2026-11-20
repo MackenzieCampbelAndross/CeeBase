@@ -25,6 +25,7 @@ import ceebase
 from src.infra.metrics import GLOBAL_METRICS, GLOBAL_LOGGER
 from src.infra.replication import ReplicationNode, ReplicationRole
 from src.infra.storage_maintenance import StorageMaintenanceManager
+from src.platform.gateway import GatewayHandler, PlatformManager
 
 DEFAULT_PORT = 8080
 DB_FILENAME = "ceebase.cbdb"
@@ -107,40 +108,56 @@ class StudioBackend:
                 if len(raw) < 4096:
                     break
 
-                if pid == 0:
-                    magic, v_maj, v_min, p_size, total_p, free_p, cat_p, crc = struct.unpack("<IHHI IIII", raw[0:32])
+                try:
+                    if pid == 0:
+                        magic, v_maj, v_min, p_size, total_p, free_p, cat_p, crc = struct.unpack("<IHHI IIII", raw[0:28])
+                        pages.append({
+                            "id": pid,
+                            "type": "HEADER_PAGE",
+                            "details": f"Magic: 0x{magic:08X} (CBDB), Version: {v_maj}.{v_min}, Pages: {total_p}, CatalogRoot: {cat_p}",
+                            "allocated": 4096,
+                            "free_space": 0
+                        })
+                    else:
+                        ptype_val, page_id, lsn, prev_p, next_p, slot_count, free_ptr, _ = struct.unpack("<IIQIIHHI", raw[0:32])
+                        crc = struct.unpack("<I", raw[4092:4096])[0]
+                        type_names = {
+                            1: "DB_HEADER",
+                            2: "SLOTTED_DATA",
+                            3: "BTREE_INTERNAL",
+                            4: "BTREE_LEAF",
+                            5: "FREE_PAGE"
+                        }
+                        ptype_str = type_names.get(ptype_val, f"PAGE_TYPE_{ptype_val}")
+                        if free_ptr > 4092 or free_ptr < 32:
+                            free_space = 0
+                            alloc = 4096
+                        else:
+                            free_space = max(0, free_ptr - (32 + slot_count * 4))
+                            alloc = 4096 - free_space
+
+                        pages.append({
+                            "id": pid,
+                            "type": ptype_str,
+                            "details": f"LSN: {lsn}, Slots: {slot_count}, FreePtr: {free_ptr}, CRC32: 0x{crc:08X}",
+                            "allocated": alloc,
+                            "free_space": free_space
+                        })
+                except Exception as e:
                     pages.append({
                         "id": pid,
-                        "type": "HEADER_PAGE",
-                        "details": f"Magic: 0x{magic:08X} (CBDB), Version: {v_maj}.{v_min}, Pages: {total_p}, CRC32: 0x{crc:08X}",
+                        "type": "RAW_PAGE",
+                        "details": f"Page {pid} parse fallback",
                         "allocated": 4096,
                         "free_space": 0
-                    })
-                elif pid == 1:
-                    pages.append({
-                        "id": pid,
-                        "type": "CATALOG_PAGE",
-                        "details": "System Catalog metadata, schemas and index definitions",
-                        "allocated": 4096,
-                        "free_space": 0
-                    })
-                else:
-                    page_id, lsn, free_ptr, slot_count = struct.unpack("<IQHH", raw[0:16])
-                    crc = struct.unpack("<I", raw[4092:4096])[0]
-                    free_space = free_ptr - (16 + slot_count * 4) if free_ptr >= (16 + slot_count * 4) else 0
-                    pages.append({
-                        "id": pid,
-                        "type": "DATA_SLOTTED_PAGE",
-                        "details": f"Slot Count: {slot_count} tuples, FreeSpacePtr: {free_ptr}, CRC32: 0x{crc:08X}",
-                        "allocated": 4096 - free_space,
-                        "free_space": max(0, free_space)
                     })
 
         return pages
 
 
-class StudioHandler(http.server.SimpleHTTPRequestHandler):
+class StudioHandler(GatewayHandler):
     backend = None
+    platform = None
     static_dir = Path(__file__).resolve().parent / "static"
     sessions = {"mock_session_admin": {"user": "admin@ceebase.local", "role": "PLATFORM_ADMIN"}}
     backups = []
@@ -148,6 +165,12 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+
+        if path.startswith(("/auth/", "/rest/", "/storage/", "/functions/", "/realtime/")) or \
+           path in ("/api/v1/projects", "/api/v1/organizations") or \
+           path.startswith(("/api/v1/projects/", "/api/v1/rls/")):
+            GatewayHandler.do_GET(self)
+            return
 
         if path in ("/", "/index.html"):
             self.serve_file(self.static_dir / "index.html", "text/html")
@@ -224,6 +247,14 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+
+        if path.startswith(("/auth/", "/rest/", "/storage/", "/functions/", "/realtime/")) or \
+           path in ("/api/v1/projects", "/api/v1/organizations") or \
+           path.startswith(("/api/v1/projects/", "/api/v1/rls/")) or \
+           (path in ("/api/v1/query",) and self.headers.get("X-Project-Id")):
+            GatewayHandler.do_POST(self)
+            return
+
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
         try:
@@ -268,14 +299,7 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Endpoint not found")
 
     def send_json(self, data, status=200):
-        blob = json.dumps(data).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(blob)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        self.end_headers()
-        self.wfile.write(blob)
+        self._send_json(data, status=status)
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -299,7 +323,12 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
 
 def run_server(port=DEFAULT_PORT, host="127.0.0.1", db_path=DB_FILENAME):
     backend = StudioBackend(db_path)
+    platform = PlatformManager()
+    if "default" in platform.projects:
+        platform.projects["default"].conn = backend.conn
+    GatewayHandler.platform = platform
     StudioHandler.backend = backend
+    StudioHandler.platform = platform
 
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         daemon_threads = True

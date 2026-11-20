@@ -47,3 +47,7 @@ target/
 tools/cli/target/
 
 backups/
+platform_data/
+.agents/
+skills-lock.json
+
