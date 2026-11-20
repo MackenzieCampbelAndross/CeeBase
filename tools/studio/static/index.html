@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CeeBase Studio</title>
+  <link rel="stylesheet" href="tokens.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -11,49 +12,104 @@
       theme: {
         extend: {
           colors: {
-            brand: { 500: '#10b981', 600: '#059669', 700: '#047857' },
-            dark: { 800: '#18181b', 850: '#121215', 900: '#09090b', 950: '#040405' }
+            brand: {
+              DEFAULT: '#00638E',
+              deep: '#004A6B',
+              soft: '#8CB9CC',
+              light: '#BFD8E3',
+              50: '#f0f7fa',
+              100: '#e0eff5',
+              200: '#bfd8e3',
+              300: '#8cb9cc',
+              400: '#4d94b3',
+              500: '#00638e',
+              600: '#004a6b',
+              700: '#003750',
+              800: '#002638',
+              900: '#001620',
+              950: '#000c12',
+            },
+            onyx: {
+              DEFAULT: '#000000',
+              deep: '#000000',
+              elevated: '#141414',
+              soft: '#141414',
+            },
+            charcoal: {
+              DEFAULT: '#2B2B2B',
+              surface: '#2B2B2B',
+              border: '#2B2B2B',
+            },
+            azure: {
+              dark: '#00638E',
+              deep: '#004A6B',
+              soft: '#8CB9CC',
+              light: '#BFD8E3',
+            },
+            paper: '#FFFFFF',
           }
         }
       }
     }
   </script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    :root {
+      --ceebase-primary: #00638E;
+      --ceebase-primary-deep: #004A6B;
+      --ceebase-primary-soft: #8CB9CC;
+      --ceebase-light-azure: #BFD8E3;
+      --ceebase-paper-white: #FFFFFF;
+      --ceebase-onyx: #000000;
+      --ceebase-onyx-raised: #141414;
+      --ceebase-charcoal: #2B2B2B;
+      --ceebase-brand-gradient: linear-gradient(135deg, #000000 0%, #004A6B 35%, #00638E 70%, #8CB9CC 100%);
+      --ceebase-brand-gradient-h: linear-gradient(90deg, #000000 0%, #004A6B 35%, #00638E 70%, #8CB9CC 100%);
+    }
+    .brand-gradient { background: var(--ceebase-brand-gradient); }
+    .brand-gradient-h { background: var(--ceebase-brand-gradient-h); }
+    .text-azure-gradient {
+      background: var(--ceebase-brand-gradient-h);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Circular", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #121215; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    ::-webkit-scrollbar-track { background: #141414; }
+    ::-webkit-scrollbar-thumb { background: #2B2B2B; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #383838; }
   </style>
 </head>
-<body class="bg-dark-900 text-zinc-100 flex flex-col h-screen overflow-hidden">
+<body class="bg-onyx text-zinc-100 flex flex-col h-screen overflow-hidden">
+
+  <!-- Official Brand Gradient Accent Stripe -->
+  <div class="h-[2px] w-full brand-gradient-h shrink-0"></div>
 
   <!-- Top Navigation Bar -->
-  <header class="h-14 border-b border-zinc-800 bg-dark-850 px-5 flex items-center justify-between shrink-0">
+  <header class="h-14 border-b border-charcoal bg-onyx-elevated px-5 flex items-center justify-between shrink-0">
     <div class="flex items-center gap-3">
-      <div class="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-sm">
+      <div class="h-8 w-8 rounded-lg bg-brand/20 border border-brand/60 flex items-center justify-center font-bold text-azure-light text-sm shadow-[0_0_12px_rgba(0,99,142,0.3)]">
         CB
       </div>
       <div>
         <h1 class="font-semibold text-sm tracking-wide flex items-center gap-2">
           CeeBase Studio
-          <span class="text-xs font-mono font-normal bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">v1.0.0</span>
-          <span class="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded font-mono">Platform BaaS</span>
+          <span class="text-xs font-mono font-normal bg-charcoal text-zinc-400 px-2 py-0.5 rounded">v1.0.0</span>
+          <span class="text-xs bg-brand/20 text-azure-light border border-brand/40 px-2 py-0.5 rounded font-mono">Platform BaaS</span>
         </h1>
       </div>
     </div>
 
     <!-- DB Status Indicator -->
     <div class="flex items-center gap-4 text-xs font-mono text-zinc-400">
-      <div class="flex items-center gap-2 bg-dark-900 border border-zinc-800 px-3 py-1.5 rounded-full">
-        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <div class="flex items-center gap-2 bg-onyx border border-charcoal px-3 py-1.5 rounded-full">
+        <span class="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
         <span class="text-zinc-200" id="header-db-name">ceebase.cbdb</span>
-        <span class="text-zinc-500">|</span>
+        <span class="text-zinc-600">|</span>
         <span>4 KB Slotted Pages</span>
-        <span class="text-zinc-500">|</span>
-        <span class="text-emerald-400">Gateway Active</span>
+        <span class="text-zinc-600">|</span>
+        <span class="text-azure-light font-medium">Gateway Active</span>
       </div>
-      <button onclick="refreshAll()" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition font-sans text-xs">
+      <button onclick="refreshAll()" class="px-3 py-1.5 rounded bg-charcoal hover:bg-[#383838] border border-[#383838] text-zinc-200 transition font-sans text-xs">
         ↻ Refresh
       </button>
     </div>
@@ -63,49 +119,49 @@
   <div class="flex flex-1 overflow-hidden">
 
     <!-- Left Navigation Sidebar -->
-    <aside class="w-60 border-r border-zinc-800 bg-dark-850 flex flex-col shrink-0 overflow-y-auto">
-      <div class="p-3 border-b border-zinc-800 flex flex-col gap-1">
-        <button onclick="switchTab('overview')" id="tab-btn-overview" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-zinc-800 transition">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    <aside class="w-60 border-r border-charcoal bg-onyx-elevated flex flex-col shrink-0 overflow-y-auto">
+      <div class="p-3 border-b border-charcoal flex flex-col gap-1">
+        <button onclick="switchTab('overview')" id="tab-btn-overview" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-brand transition shadow-sm">
+          <svg class="w-4 h-4 text-azure-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           Overview
         </button>
-        <button onclick="switchTab('table')" id="tab-btn-table" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <button onclick="switchTab('table')" id="tab-btn-table" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           Table Browser
         </button>
-        <button onclick="switchTab('sql')" id="tab-btn-sql" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <button onclick="switchTab('sql')" id="tab-btn-sql" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           SQL Query Editor
         </button>
-        <button onclick="switchTab('auth')" id="tab-btn-auth" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <button onclick="switchTab('auth')" id="tab-btn-auth" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
           Authentication & RLS
         </button>
-        <button onclick="switchTab('storage')" id="tab-btn-storage" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <button onclick="switchTab('storage')" id="tab-btn-storage" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           Object Storage
         </button>
-        <button onclick="switchTab('realtime')" id="tab-btn-realtime" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <button onclick="switchTab('realtime')" id="tab-btn-realtime" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           Realtime Events
         </button>
-        <button onclick="switchTab('functions')" id="tab-btn-functions" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        <button onclick="switchTab('functions')" id="tab-btn-functions" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
           Functions & Jobs
         </button>
-        <button onclick="switchTab('api')" id="tab-btn-api" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <button onclick="switchTab('api')" id="tab-btn-api" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           REST API & Docs
         </button>
-        <button onclick="switchTab('monitoring')" id="tab-btn-monitoring" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <button onclick="switchTab('monitoring')" id="tab-btn-monitoring" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
           Logs & Monitoring
         </button>
-        <button onclick="switchTab('pages')" id="tab-btn-pages" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
-          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <button onclick="switchTab('pages')" id="tab-btn-pages" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
+          <svg class="w-4 h-4 text-azure-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
           4 KB Page Inspector
         </button>
-        <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition">
           <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           Project Settings
         </button>
@@ -114,20 +170,20 @@
       <!-- Quick Database Tables List -->
       <div class="px-4 py-2 flex items-center justify-between text-xs font-semibold text-zinc-400 uppercase tracking-wider">
         <span>Tables</span>
-        <button onclick="promptNewTable()" title="Create Table" class="text-zinc-400 hover:text-emerald-400 text-sm font-bold">+</button>
+        <button onclick="promptNewTable()" title="Create Table" class="text-zinc-400 hover:text-azure-light text-sm font-bold">+</button>
       </div>
       <div id="tables-list" class="flex-1 overflow-y-auto px-2 space-y-1">
         <div class="text-zinc-500 text-xs px-3 py-2 text-center">Loading tables...</div>
       </div>
 
-      <div class="p-3 border-t border-zinc-800 text-[11px] text-zinc-500 font-mono flex justify-between shrink-0">
+      <div class="p-3 border-t border-charcoal text-[11px] text-zinc-500 font-mono flex justify-between shrink-0">
         <span>Disk: Little-Endian</span>
         <span>Page: 4096 B</span>
       </div>
     </aside>
 
     <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col bg-dark-900 overflow-hidden">
+    <main class="flex-1 flex flex-col bg-onyx overflow-hidden">
 
       <!-- VIEW 1: OVERVIEW -->
       <section id="view-overview" class="flex-1 overflow-y-auto p-8 space-y-6">
@@ -138,53 +194,53 @@
 
         <!-- Metric Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-dark-850 border border-zinc-800 rounded-lg p-4">
+          <div class="bg-onyx-elevated border border-charcoal rounded-lg p-4">
             <span class="text-xs text-zinc-400 uppercase">Database Status</span>
-            <div class="text-xl font-bold text-emerald-400 mt-1 flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Online
+            <div class="text-xl font-bold text-azure-light mt-1 flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-brand"></span> Online
             </div>
             <span class="text-[11px] text-zinc-500 font-mono">Kernel v1.0.0 (4096B CRC32)</span>
           </div>
-          <div class="bg-dark-850 border border-zinc-800 rounded-lg p-4">
+          <div class="bg-onyx-elevated border border-charcoal rounded-lg p-4">
             <span class="text-xs text-zinc-400 uppercase">Total Tables</span>
             <div class="text-xl font-bold text-white mt-1" id="stat-tables-count">--</div>
             <span class="text-[11px] text-zinc-500 font-mono">Slotted & B+ Tree indexed</span>
           </div>
-          <div class="bg-dark-850 border border-zinc-800 rounded-lg p-4">
+          <div class="bg-onyx-elevated border border-charcoal rounded-lg p-4">
             <span class="text-xs text-zinc-400 uppercase">Storage Allocated</span>
             <div class="text-xl font-bold text-white mt-1" id="stat-storage-size">-- KB</div>
             <span class="text-[11px] text-zinc-500 font-mono" id="stat-pages-count">-- Pages</span>
           </div>
-          <div class="bg-dark-850 border border-zinc-800 rounded-lg p-4">
+          <div class="bg-onyx-elevated border border-charcoal rounded-lg p-4">
             <span class="text-xs text-zinc-400 uppercase">Realtime Broker</span>
-            <div class="text-xl font-bold text-emerald-400 mt-1">Listening</div>
+            <div class="text-xl font-bold text-azure-light mt-1">Listening</div>
             <span class="text-[11px] text-zinc-500 font-mono">WebSocket change stream</span>
           </div>
         </div>
 
         <!-- Connection Strings & Keys -->
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg p-5 space-y-4">
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg p-5 space-y-4">
           <h3 class="text-sm font-semibold text-zinc-200">Connection Information</h3>
           <div>
             <label class="text-xs text-zinc-400">REST API Gateway URL</label>
             <div class="flex items-center gap-2 mt-1">
-              <input type="text" readonly value="http://localhost:8080/rest/v1" class="flex-1 bg-dark-900 border border-zinc-700 text-xs font-mono text-zinc-300 p-2 rounded">
-              <button onclick="copyToClipboard('http://localhost:8080/rest/v1')" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs rounded text-zinc-300">Copy</button>
+              <input type="text" readonly value="http://localhost:8080/rest/v1" class="flex-1 bg-onyx border border-charcoal text-xs font-mono text-zinc-300 p-2 rounded">
+              <button onclick="copyToClipboard('http://localhost:8080/rest/v1')" class="px-3 py-2 bg-charcoal hover:bg-[#383838] border border-[#383838] text-xs rounded text-zinc-300">Copy</button>
             </div>
           </div>
           <div>
             <label class="text-xs text-zinc-400">Project Anon Public Key</label>
             <div class="flex items-center gap-2 mt-1">
-              <input type="text" readonly id="overview-anon-key" value="Loading key..." class="flex-1 bg-dark-900 border border-zinc-700 text-xs font-mono text-zinc-400 p-2 rounded truncate">
-              <button onclick="copyElementText('overview-anon-key')" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs rounded text-zinc-300">Copy</button>
+              <input type="text" readonly id="overview-anon-key" value="Loading key..." class="flex-1 bg-onyx border border-charcoal text-xs font-mono text-zinc-400 p-2 rounded truncate">
+              <button onclick="copyElementText('overview-anon-key')" class="px-3 py-2 bg-charcoal hover:bg-[#383838] border border-[#383838] text-xs rounded text-zinc-300">Copy</button>
             </div>
           </div>
         </div>
 
         <!-- Quickstart -->
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg p-5">
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg p-5">
           <h3 class="text-sm font-semibold text-zinc-200 mb-2">Connect Application with @ceebase/sdk</h3>
-          <pre class="bg-dark-900 border border-zinc-800 p-4 rounded text-xs font-mono text-zinc-300 overflow-x-auto">
+          <pre class="bg-onyx border border-charcoal p-4 rounded text-xs font-mono text-zinc-300 overflow-x-auto">
 import { createClient } from "@ceebase/sdk";
 
 const ceebase = createClient({
@@ -202,24 +258,24 @@ const { data, error } = await ceebase
 
       <!-- VIEW 2: TABLE BROWSER -->
       <section id="view-table" class="flex-1 flex flex-col overflow-hidden hidden">
-        <div class="h-14 border-b border-zinc-800 px-6 flex items-center justify-between shrink-0 bg-dark-850">
+        <div class="h-14 border-b border-charcoal px-6 flex items-center justify-between shrink-0 bg-onyx-elevated">
           <div class="flex items-center gap-3">
             <h2 id="current-table-title" class="font-semibold text-base text-zinc-100">Select a Table</h2>
-            <span id="current-table-count" class="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-mono">0 rows</span>
+            <span id="current-table-count" class="text-xs bg-charcoal text-zinc-400 px-2 py-0.5 rounded-full font-mono">0 rows</span>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="promptInsertRow()" id="btn-insert-row" class="hidden px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white transition flex items-center gap-1.5 shadow-sm">
+            <button onclick="promptInsertRow()" id="btn-insert-row" class="hidden px-3.5 py-1.5 rounded-md bg-brand hover:bg-brand-deep text-xs font-medium text-white transition flex items-center gap-1.5 shadow-sm">
               + Insert Row
             </button>
           </div>
         </div>
         <div class="flex-1 overflow-auto p-6">
-          <div class="border border-zinc-800 rounded-lg overflow-hidden bg-dark-850 shadow-sm">
+          <div class="border border-charcoal rounded-lg overflow-hidden bg-onyx-elevated shadow-sm">
             <table class="w-full text-left border-collapse" id="data-table">
-              <thead id="data-thead" class="bg-dark-900 border-b border-zinc-800 text-xs font-mono uppercase text-zinc-400">
+              <thead id="data-thead" class="bg-onyx border-b border-charcoal text-xs font-mono uppercase text-zinc-400">
                 <tr><th class="p-4">No table selected</th></tr>
               </thead>
-              <tbody id="data-tbody" class="text-sm font-mono divide-y divide-zinc-800/60 text-zinc-200">
+              <tbody id="data-tbody" class="text-sm font-mono divide-y divide-charcoal text-zinc-200">
                 <tr><td class="p-6 text-center text-zinc-500 font-sans">Choose a table from the sidebar to view its records</td></tr>
               </tbody>
             </table>
@@ -229,40 +285,40 @@ const { data, error } = await ceebase
 
       <!-- VIEW 3: SQL QUERY EDITOR -->
       <section id="view-sql" class="flex-1 flex flex-col overflow-hidden hidden">
-        <div class="p-4 border-b border-zinc-800 bg-dark-850 flex flex-col gap-3">
+        <div class="p-4 border-b border-charcoal bg-onyx-elevated flex flex-col gap-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">SQL Statement</span>
               <span class="text-xs text-zinc-500">(Press Ctrl+Enter or F5 to execute)</span>
             </div>
             <div class="flex items-center gap-2">
-              <select id="sample-queries" onchange="applySampleQuery()" class="bg-dark-900 border border-zinc-700 text-xs text-zinc-300 rounded px-2.5 py-1">
+              <select id="sample-queries" onchange="applySampleQuery()" class="bg-onyx border border-charcoal text-xs text-zinc-300 rounded px-2.5 py-1">
                 <option value="">-- Load Sample Query --</option>
                 <option value="SELECT * FROM users ORDER BY id;">Select All Users</option>
                 <option value="SELECT name, balance FROM users WHERE balance > 100.00;">Filter Users (balance > 100)</option>
                 <option value="SELECT COUNT(*), AVG(balance) FROM users;">Aggregate Statistics</option>
               </select>
-              <button onclick="executeSql()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white rounded transition shadow">
+              <button onclick="executeSql()" class="px-4 py-1.5 bg-brand hover:bg-brand-deep text-xs font-semibold text-white rounded transition shadow">
                 ▶ Run Query
               </button>
             </div>
           </div>
-          <textarea id="sql-input" rows="4" class="w-full bg-dark-900 border border-zinc-700 rounded-md p-3 font-mono text-sm text-zinc-100 focus:outline-none focus:border-indigo-500" placeholder="SELECT * FROM users;"></textarea>
+          <textarea id="sql-input" rows="4" class="w-full bg-onyx border border-charcoal rounded-md p-3 font-mono text-sm text-zinc-100 focus:outline-none focus:border-brand" placeholder="SELECT * FROM users;"></textarea>
         </div>
-        <div id="query-meta-bar" class="px-6 py-2 border-b border-zinc-800 bg-dark-900 text-xs font-mono text-zinc-400 flex items-center justify-between hidden">
-          <span id="query-meta-status" class="text-emerald-400">Query OK</span>
+        <div id="query-meta-bar" class="px-6 py-2 border-b border-charcoal bg-onyx text-xs font-mono text-zinc-400 flex items-center justify-between hidden">
+          <span id="query-meta-status" class="text-azure-light font-bold">Query OK</span>
           <div class="flex gap-4">
             <span id="query-meta-rows">0 rows</span>
             <span id="query-meta-time">0.000 ms</span>
           </div>
         </div>
         <div class="flex-1 overflow-auto p-6">
-          <div class="border border-zinc-800 rounded-lg overflow-hidden bg-dark-850 shadow-sm">
+          <div class="border border-charcoal rounded-lg overflow-hidden bg-onyx-elevated shadow-sm">
             <table class="w-full text-left border-collapse" id="sql-table">
-              <thead id="sql-thead" class="bg-dark-900 border-b border-zinc-800 text-xs font-mono uppercase text-zinc-400">
+              <thead id="sql-thead" class="bg-onyx border-b border-charcoal text-xs font-mono uppercase text-zinc-400">
                 <tr><th class="p-4">Results</th></tr>
               </thead>
-              <tbody id="sql-tbody" class="text-sm font-mono divide-y divide-zinc-800/60 text-zinc-200">
+              <tbody id="sql-tbody" class="text-sm font-mono divide-y divide-charcoal text-zinc-200">
                 <tr><td class="p-6 text-center text-zinc-500 font-sans">Run a query to view results here</td></tr>
               </tbody>
             </table>
@@ -277,16 +333,16 @@ const { data, error } = await ceebase
             <h2 class="text-xl font-bold text-white">Authentication & Identity</h2>
             <p class="text-xs text-zinc-400 mt-1">Manage project end-users, JWT sessions, and Row-Level Security policies.</p>
           </div>
-          <button onclick="promptNewUser()" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-xs font-medium text-white rounded transition shadow">
+          <button onclick="promptNewUser()" class="px-3.5 py-2 bg-brand hover:bg-brand-deep text-xs font-medium text-white rounded transition shadow">
             + Add User
           </button>
         </div>
 
         <!-- Users Table -->
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg overflow-hidden">
-          <div class="px-4 py-3 border-b border-zinc-800 font-semibold text-xs text-zinc-300">Registered Users</div>
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg overflow-hidden">
+          <div class="px-4 py-3 border-b border-charcoal font-semibold text-xs text-zinc-300">Registered Users</div>
           <table class="w-full text-left border-collapse" id="auth-users-table">
-            <thead class="bg-dark-900 border-b border-zinc-800 text-xs font-mono uppercase text-zinc-400">
+            <thead class="bg-onyx border-b border-charcoal text-xs font-mono uppercase text-zinc-400">
               <tr>
                 <th class="p-3">User ID</th>
                 <th class="p-3">Email</th>
@@ -294,20 +350,20 @@ const { data, error } = await ceebase
                 <th class="p-3">Status</th>
               </tr>
             </thead>
-            <tbody id="auth-users-tbody" class="text-xs font-mono divide-y divide-zinc-800/60 text-zinc-300">
+            <tbody id="auth-users-tbody" class="text-xs font-mono divide-y divide-charcoal text-zinc-300">
               <tr><td colspan="4" class="p-4 text-center text-zinc-500">Loading users...</td></tr>
             </tbody>
           </table>
         </div>
 
         <!-- Row-Level Security Rules -->
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg p-5 space-y-3">
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg p-5 space-y-3">
           <h3 class="text-sm font-semibold text-zinc-200">Row-Level Security (RLS) Policies</h3>
-          <p class="text-xs text-zinc-400">Policies restrict row access at database execution boundary according to <span class="font-mono text-purple-400">auth.uid()</span> and user role.</p>
-          <div class="border border-zinc-800 rounded bg-dark-900 p-3 text-xs font-mono text-zinc-300 space-y-2">
-            <div class="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span class="text-emerald-400">users_read_own_data</span>
-              <span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">TABLE: users | SELECT</span>
+          <p class="text-xs text-zinc-400">Policies restrict row access at database execution boundary according to <span class="font-mono text-azure-light">auth.uid()</span> and user role.</p>
+          <div class="border border-charcoal rounded bg-onyx p-3 text-xs font-mono text-zinc-300 space-y-2">
+            <div class="flex items-center justify-between pb-2 border-b border-charcoal">
+              <span class="text-azure-light font-medium">users_read_own_data</span>
+              <span class="text-[10px] bg-charcoal px-2 py-0.5 rounded text-zinc-400">TABLE: users | SELECT</span>
             </div>
             <div class="text-zinc-400">USING (auth.uid() = user_id OR auth.role() = 'service_role')</div>
           </div>
@@ -321,7 +377,7 @@ const { data, error } = await ceebase
             <h2 class="text-xl font-bold text-white">Object Storage</h2>
             <p class="text-xs text-zinc-400 mt-1">S3-compatible bucket and file management with signed URLs.</p>
           </div>
-          <button onclick="promptNewBucket()" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-xs font-medium text-white rounded transition shadow">
+          <button onclick="promptNewBucket()" class="px-3.5 py-2 bg-brand hover:bg-brand-deep text-xs font-medium text-white rounded transition shadow">
             + New Bucket
           </button>
         </div>
@@ -338,12 +394,12 @@ const { data, error } = await ceebase
             <h2 class="text-xl font-bold text-white">Realtime Event Stream</h2>
             <p class="text-xs text-zinc-400 mt-1">Live WebSocket changefeed broadcasting committed database mutations (INSERT, UPDATE, DELETE).</p>
           </div>
-          <button onclick="broadcastTestEvent()" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-xs font-medium text-white rounded transition">
+          <button onclick="broadcastTestEvent()" class="px-3 py-1.5 bg-brand hover:bg-brand-deep text-xs font-medium text-white rounded transition">
             ⚡ Broadcast Test Mutation
           </button>
         </div>
 
-        <div class="flex-1 bg-dark-850 border border-zinc-800 rounded-lg p-4 font-mono text-xs overflow-y-auto space-y-2" id="realtime-log">
+        <div class="flex-1 bg-onyx-elevated border border-charcoal rounded-lg p-4 font-mono text-xs overflow-y-auto space-y-2" id="realtime-log">
           <div class="text-zinc-500">[System] Realtime changefeed connected to project broker. Listening for mutations...</div>
         </div>
       </section>
@@ -355,7 +411,7 @@ const { data, error } = await ceebase
             <h2 class="text-xl font-bold text-white">Serverless Functions & Jobs</h2>
             <p class="text-xs text-zinc-400 mt-1">Isolated backend code execution with environment variables and execution timeout.</p>
           </div>
-          <button onclick="promptDeployFunction()" class="px-3.5 py-2 bg-yellow-600 hover:bg-yellow-500 text-xs font-medium text-white rounded transition shadow">
+          <button onclick="promptDeployFunction()" class="px-3.5 py-2 bg-brand hover:bg-brand-deep text-xs font-medium text-white rounded transition shadow">
             + Deploy Function
           </button>
         </div>
@@ -371,21 +427,21 @@ const { data, error } = await ceebase
           <h2 class="text-xl font-bold text-white">Auto-Generated REST API & OpenAPI Docs</h2>
           <p class="text-xs text-zinc-400 mt-1">Instant CRUD endpoints generated automatically from your CeeBase schema.</p>
         </div>
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg p-5 space-y-4 font-mono text-xs">
-          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-            <span class="text-emerald-400 font-bold">GET /rest/v1/:table</span>
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg p-5 space-y-4 font-mono text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-charcoal">
+            <span class="text-azure-light font-bold">GET /rest/v1/:table</span>
             <span class="text-zinc-500">Filter with ?col=eq.val&order=id.asc&limit=20</span>
           </div>
-          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-            <span class="text-blue-400 font-bold">POST /rest/v1/:table</span>
+          <div class="flex items-center justify-between pb-3 border-b border-charcoal">
+            <span class="text-azure-soft font-bold">POST /rest/v1/:table</span>
             <span class="text-zinc-500">Insert JSON payload or array of records</span>
           </div>
-          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div class="flex items-center justify-between pb-3 border-b border-charcoal">
             <span class="text-amber-400 font-bold">PATCH /rest/v1/:table</span>
             <span class="text-zinc-500">Update matching rows</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-red-400 font-bold">DELETE /rest/v1/:table</span>
+            <span class="text-rose-400 font-bold">DELETE /rest/v1/:table</span>
             <span class="text-zinc-500">Delete matching records</span>
           </div>
         </div>
@@ -394,7 +450,7 @@ const { data, error } = await ceebase
       <!-- VIEW 9: LOGS & MONITORING -->
       <section id="view-monitoring" class="flex-1 flex flex-col overflow-hidden p-6 hidden">
         <h2 class="text-xl font-bold text-white mb-2">Platform Logs & Prometheus Metrics</h2>
-        <div class="flex-1 bg-dark-850 border border-zinc-800 rounded-lg p-4 font-mono text-xs overflow-y-auto space-y-1" id="monitoring-log">
+        <div class="flex-1 bg-onyx-elevated border border-charcoal rounded-lg p-4 font-mono text-xs overflow-y-auto space-y-1" id="monitoring-log">
           <div class="text-zinc-400">[2026-11-21T00:00:00Z] INFO ceebase-kernel: 4 KB Slotted storage engine operational. CRC32 valid.</div>
           <div class="text-zinc-400">[2026-11-21T00:00:00Z] INFO ceebase-gateway: Platform BaaS Gateway active. Listening on :8080.</div>
         </div>
@@ -404,7 +460,7 @@ const { data, error } = await ceebase
       <section id="view-pages" class="flex-1 flex flex-col overflow-hidden hidden p-6">
         <div class="mb-4">
           <h2 class="font-semibold text-lg text-zinc-100">Physical 4 KB Page Storage Inspector</h2>
-          <p class="text-xs text-zinc-400 mt-1">Real-time inspection of 4,096-byte pages formatted directly inside <span class="font-mono text-emerald-400">ceebase.cbdb</span> on disk.</p>
+          <p class="text-xs text-zinc-400 mt-1">Real-time inspection of 4,096-byte pages formatted directly inside <span class="font-mono text-azure-light">ceebase.cbdb</span> on disk.</p>
         </div>
         <div id="pages-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
           <div class="text-zinc-500 text-xs">Loading page diagnostics...</div>
@@ -414,18 +470,18 @@ const { data, error } = await ceebase
       <!-- VIEW 11: SETTINGS -->
       <section id="view-settings" class="flex-1 overflow-y-auto p-8 space-y-6 hidden">
         <h2 class="text-xl font-bold text-white">Project Settings & Credentials</h2>
-        <div class="bg-dark-850 border border-zinc-800 rounded-lg p-5 space-y-4">
+        <div class="bg-onyx-elevated border border-charcoal rounded-lg p-5 space-y-4">
           <div>
             <label class="text-xs text-zinc-400">Project ID</label>
-            <input type="text" readonly value="default" class="w-full bg-dark-900 border border-zinc-700 text-xs font-mono text-zinc-300 p-2 rounded mt-1">
+            <input type="text" readonly value="default" class="w-full bg-onyx border border-charcoal text-xs font-mono text-zinc-300 p-2 rounded mt-1">
           </div>
           <div>
             <label class="text-xs text-zinc-400">Anon Public Key (Client Safe)</label>
-            <input type="text" readonly id="settings-anon-key" value="Loading..." class="w-full bg-dark-900 border border-zinc-700 text-xs font-mono text-zinc-400 p-2 rounded mt-1 truncate">
+            <input type="text" readonly id="settings-anon-key" value="Loading..." class="w-full bg-onyx border border-charcoal text-xs font-mono text-zinc-400 p-2 rounded mt-1 truncate">
           </div>
           <div>
             <label class="text-xs text-zinc-400">Service Role Secret Key (Server Only - Bypass RLS)</label>
-            <input type="password" readonly id="settings-service-key" value="Loading..." class="w-full bg-dark-900 border border-zinc-700 text-xs font-mono text-amber-400 p-2 rounded mt-1 truncate">
+            <input type="password" readonly id="settings-service-key" value="Loading..." class="w-full bg-onyx border border-charcoal text-xs font-mono text-azure-light p-2 rounded mt-1 truncate">
           </div>
         </div>
       </section>
@@ -445,13 +501,13 @@ const { data, error } = await ceebase
         const viewEl = document.getElementById(`view-${t}`);
         if (viewEl) viewEl.classList.add('hidden');
         const btn = document.getElementById(`tab-btn-${t}`);
-        if (btn) btn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition";
+        if (btn) btn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-white hover:bg-charcoal/60 transition";
       });
 
       const activeView = document.getElementById(`view-${tab}`);
       if (activeView) activeView.classList.remove('hidden');
       const activeBtn = document.getElementById(`tab-btn-${tab}`);
-      if (activeBtn) activeBtn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-zinc-800 transition";
+      if (activeBtn) activeBtn.className = "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-white bg-brand transition shadow-sm";
 
       if (tab === 'pages') loadPageDiagnostics();
       if (tab === 'auth') loadAuthUsers();
@@ -493,17 +549,17 @@ const { data, error } = await ceebase
       const tables = await fetchJson('/api/tables');
       const container = document.getElementById('tables-list');
       if (!tables || tables.length === 0) {
-        container.innerHTML = `<div class="text-zinc-500 text-xs px-3 py-4 text-center">No tables found.<br><button onclick="promptNewTable()" class="mt-2 text-emerald-400 hover:underline">Create Table</button></div>`;
+        container.innerHTML = `<div class="text-zinc-500 text-xs px-3 py-4 text-center">No tables found.<br><button onclick="promptNewTable()" class="mt-2 text-azure-light hover:underline">Create Table</button></div>`;
         return;
       }
 
       container.innerHTML = tables.map(t => `
-        <button onclick="selectTable('${t.name}')" class="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-mono text-zinc-300 hover:text-white hover:bg-zinc-800/70 transition ${currentTable === t.name ? 'bg-zinc-800 font-bold text-emerald-400' : ''}">
+        <button onclick="selectTable('${t.name}')" class="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-mono text-zinc-300 hover:text-white hover:bg-charcoal/70 transition ${currentTable === t.name ? 'bg-brand/20 font-bold text-azure-light border-l-2 border-brand' : ''}">
           <span class="flex items-center gap-2 truncate">
             <span class="text-zinc-500">#</span>
             <span class="truncate">${t.name}</span>
           </span>
-          <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">${t.row_count}</span>
+          <span class="text-[10px] bg-charcoal text-zinc-400 px-1.5 py-0.5 rounded">${t.row_count}</span>
         </button>
       `).join('');
 
@@ -528,7 +584,7 @@ const { data, error } = await ceebase
       const countBadge = document.getElementById('current-table-count');
 
       if (!data || !data.success) {
-        tbody.innerHTML = `<tr><td class="p-6 text-center text-red-400 font-mono">Error: ${data ? data.error : 'Failed to load'}</td></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-center text-rose-400 font-mono">Error: ${data ? data.error : 'Failed to load'}</td></tr>`;
         return;
       }
 
@@ -539,15 +595,15 @@ const { data, error } = await ceebase
         return;
       }
 
-      thead.innerHTML = `<tr>${data.columns.map(c => `<th class="p-3.5 border-r border-zinc-800 last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
+      thead.innerHTML = `<tr>${data.columns.map(c => `<th class="p-3.5 border-r border-charcoal last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
       if (data.rows.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${data.columns.length}" class="p-8 text-center text-zinc-500">No records found. Click "+ Insert Row" above.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = data.rows.map(row => `
-        <tr class="hover:bg-zinc-800/40 transition">
-          ${row.map(val => `<td class="p-3.5 border-r border-zinc-800/60 last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
+        <tr class="hover:bg-charcoal/40 transition">
+          ${row.map(val => `<td class="p-3.5 border-r border-charcoal last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
         </tr>
       `).join('');
     }
@@ -572,30 +628,30 @@ const { data, error } = await ceebase
 
       if (!res.success) {
         metaStatus.innerText = "Execution Failed";
-        metaStatus.className = "text-red-400 font-bold";
+        metaStatus.className = "text-rose-400 font-bold";
         metaRows.innerText = "0 rows";
         metaTime.innerText = `${res.elapsed_ms} ms`;
-        thead.innerHTML = `<tr><th class="p-4 text-red-400 font-mono">Error Output</th></tr>`;
-        tbody.innerHTML = `<tr><td class="p-6 text-red-300 font-mono bg-red-950/20">${res.error}</td></tr>`;
+        thead.innerHTML = `<tr><th class="p-4 text-rose-400 font-mono">Error Output</th></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-rose-300 font-mono bg-rose-950/20">${res.error}</td></tr>`;
         return;
       }
 
       metaStatus.innerText = "Query OK";
-      metaStatus.className = "text-emerald-400 font-bold";
+      metaStatus.className = "text-azure-light font-bold";
       metaRows.innerText = `${res.rows.length || res.rowcount} row(s) affected`;
       metaTime.innerText = `${res.elapsed_ms} ms`;
 
       if (res.columns.length === 0) {
         thead.innerHTML = `<tr><th class="p-4">Execution Result</th></tr>`;
-        tbody.innerHTML = `<tr><td class="p-6 text-emerald-400 font-mono">Statement executed successfully. (${res.rowcount} row(s) affected)</td></tr>`;
+        tbody.innerHTML = `<tr><td class="p-6 text-azure-light font-mono">Statement executed successfully. (${res.rowcount} row(s) affected)</td></tr>`;
         loadTables();
         return;
       }
 
-      thead.innerHTML = `<tr>${res.columns.map(c => `<th class="p-3.5 border-r border-zinc-800 last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
+      thead.innerHTML = `<tr>${res.columns.map(c => `<th class="p-3.5 border-r border-charcoal last:border-0 font-medium">${c}</th>`).join('')}</tr>`;
       tbody.innerHTML = res.rows.map(row => `
-        <tr class="hover:bg-zinc-800/40 transition">
-          ${row.map(val => `<td class="p-3.5 border-r border-zinc-800/60 last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
+        <tr class="hover:bg-charcoal/40 transition">
+          ${row.map(val => `<td class="p-3.5 border-r border-charcoal last:border-0 truncate max-w-xs">${val !== null ? val : '<span class="text-zinc-600">NULL</span>'}</td>`).join('')}
         </tr>
       `).join('');
 
@@ -614,11 +670,11 @@ const { data, error } = await ceebase
       }
 
       tbody.innerHTML = users.map(u => `
-        <tr class="hover:bg-zinc-800/40 transition">
+        <tr class="hover:bg-charcoal/40 transition">
           <td class="p-3 text-zinc-400">${u.id}</td>
           <td class="p-3 font-semibold text-zinc-100">${u.email}</td>
-          <td class="p-3 text-emerald-400">Yes</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">Active</span></td>
+          <td class="p-3 text-azure-light font-medium">Yes</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded bg-brand/20 text-azure-light border border-brand/40">Active</span></td>
         </tr>
       `).join('');
     }
@@ -627,14 +683,14 @@ const { data, error } = await ceebase
       const container = document.getElementById('storage-buckets-container');
       const buckets = await fetchJson('/storage/v1/bucket') || [];
       if (buckets.length === 0) {
-        container.innerHTML = `<div class="text-xs text-zinc-500 p-4 border border-zinc-800 rounded bg-dark-850">No storage buckets found. Click "+ New Bucket" to create one.</div>`;
+        container.innerHTML = `<div class="text-xs text-zinc-500 p-4 border border-charcoal rounded bg-onyx-elevated">No storage buckets found. Click "+ New Bucket" to create one.</div>`;
         return;
       }
       container.innerHTML = buckets.map(b => `
-        <div class="border border-zinc-800 bg-dark-850 rounded-lg p-4 space-y-2">
+        <div class="border border-charcoal bg-onyx-elevated rounded-lg p-4 space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-sm text-zinc-100">${b.name}</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded ${b.public ? 'bg-cyan-950 text-cyan-400 border border-cyan-800' : 'bg-zinc-800 text-zinc-400'}">${b.public ? 'PUBLIC' : 'PRIVATE'}</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded ${b.public ? 'bg-brand/20 text-azure-light border border-brand/50' : 'bg-charcoal text-zinc-400'}">${b.public ? 'PUBLIC' : 'PRIVATE'}</span>
           </div>
           <div class="text-xs font-mono text-zinc-500">Bucket ID: ${b.id}</div>
         </div>
@@ -645,16 +701,16 @@ const { data, error } = await ceebase
       const container = document.getElementById('functions-list-container');
       const fns = await fetchJson('/functions/v1') || [];
       if (fns.length === 0) {
-        container.innerHTML = `<div class="text-xs text-zinc-500 p-4 border border-zinc-800 rounded bg-dark-850">No functions deployed. Click "+ Deploy Function" to create one.</div>`;
+        container.innerHTML = `<div class="text-xs text-zinc-500 p-4 border border-charcoal rounded bg-onyx-elevated">No functions deployed. Click "+ Deploy Function" to create one.</div>`;
         return;
       }
       container.innerHTML = fns.map(f => `
-        <div class="border border-zinc-800 bg-dark-850 rounded-lg p-4 flex items-center justify-between">
+        <div class="border border-charcoal bg-onyx-elevated rounded-lg p-4 flex items-center justify-between">
           <div>
             <div class="font-bold text-sm text-zinc-100">${f.name}</div>
             <div class="text-xs font-mono text-zinc-500 mt-0.5">Runtime: ${f.runtime} | Timeout: ${f.timeout_sec}s</div>
           </div>
-          <span class="text-[11px] font-mono px-2 py-1 rounded bg-zinc-800 text-zinc-300">Invocations: ${f.metrics?.invocations || 0}</span>
+          <span class="text-[11px] font-mono px-2 py-1 rounded bg-charcoal text-zinc-300">Invocations: ${f.metrics?.invocations || 0}</span>
         </div>
       `).join('');
     }
@@ -668,12 +724,12 @@ const { data, error } = await ceebase
       }
 
       container.innerHTML = pages.map(p => {
-        let badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/30";
-        if (p.type === 'HEADER_PAGE') badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-        if (p.type === 'CATALOG_PAGE') badgeColor = "bg-indigo-500/10 text-indigo-400 border-indigo-500/30";
+        let badgeColor = "bg-brand/20 text-azure-light border-brand/40";
+        if (p.type === 'HEADER_PAGE') badgeColor = "bg-brand text-white border-brand";
+        if (p.type === 'CATALOG_PAGE') badgeColor = "bg-brand/30 text-azure-light border-brand/50";
 
         return `
-          <div class="border border-zinc-800 bg-dark-850 rounded-lg p-4 flex flex-col justify-between shadow-sm">
+          <div class="border border-charcoal bg-onyx-elevated rounded-lg p-4 flex flex-col justify-between shadow-sm">
             <div>
               <div class="flex items-center justify-between mb-2">
                 <span class="font-mono text-xs font-bold text-zinc-200">Page #${p.id}</span>
@@ -682,9 +738,9 @@ const { data, error } = await ceebase
               <p class="text-xs font-mono text-zinc-400 break-all mb-3">${p.details}</p>
             </div>
             <div>
-              <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
-                <div class="bg-emerald-500 h-full" style="width: ${(p.allocated / 4096) * 100}%"></div>
-                <div class="bg-zinc-700 h-full" style="width: ${(p.free_space / 4096) * 100}%"></div>
+              <div class="h-2 w-full bg-charcoal rounded-full overflow-hidden flex">
+                <div class="bg-brand h-full" style="width: ${(p.allocated / 4096) * 100}%"></div>
+                <div class="bg-[#383838] h-full" style="width: ${(p.free_space / 4096) * 100}%"></div>
               </div>
               <div class="flex justify-between text-[10px] font-mono text-zinc-500 mt-1">
                 <span>Used: ${p.allocated} B</span>
@@ -748,7 +804,7 @@ const { data, error } = await ceebase
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: "users", type: "INSERT", record: { id: 99, name: "Live Event Test" } })
       }).then(res => {
-        log.innerHTML += `<div class="text-emerald-400">[${time}] Mutation Broadcast: INSERT on 'users' -> Delivered to ${res?.delivered_to || 1} subscriber(s)</div>`;
+        log.innerHTML += `<div class="text-azure-light">[${time}] Mutation Broadcast: INSERT on 'users' -> Delivered to ${res?.delivered_to || 1} subscriber(s)</div>`;
         log.scrollTop = log.scrollHeight;
       });
     }

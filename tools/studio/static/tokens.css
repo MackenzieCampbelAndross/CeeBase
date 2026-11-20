@@ -1,0 +1,48 @@
+/* CeeBase Official Design Tokens — Derived from DESIGN.md */
+:root {
+  /* Brand Colours */
+  --ceebase-primary: #00638E;
+  --ceebase-primary-deep: #004A6B;
+  --ceebase-primary-soft: #8CB9CC;
+  --ceebase-light-azure: #BFD8E3;
+  --ceebase-paper-white: #FFFFFF;
+  --ceebase-onyx: #000000;
+  --ceebase-onyx-raised: #141414;
+  --ceebase-charcoal: #2B2B2B;
+
+  /* Typography Colors */
+  --ceebase-ink: #FFFFFF;
+  --ceebase-ink-secondary: #BFD8E3;
+  --ceebase-ink-mute: #8CB9CC;
+  --ceebase-on-primary: #FFFFFF;
+  --ceebase-on-dark: #FFFFFF;
+
+  /* Surfaces & Canvases */
+  --ceebase-canvas: #000000;
+  --ceebase-canvas-soft: #141414;
+  --ceebase-canvas-night: #000000;
+  --ceebase-canvas-night-soft: #141414;
+
+  /* Hairlines & Boundaries */
+  --ceebase-hairline: #2B2B2B;
+  --ceebase-hairline-strong: #BFD8E3;
+  --ceebase-hairline-cool: #2B2B2B;
+
+  /* Official Brand Gradient: #000000 -> #004A6B -> #00638E -> #8CB9CC */
+  --ceebase-brand-gradient: linear-gradient(135deg, #000000 0%, #004A6B 35%, #00638E 70%, #8CB9CC 100%);
+  --ceebase-brand-gradient-h: linear-gradient(90deg, #000000 0%, #004A6B 35%, #00638E 70%, #8CB9CC 100%);
+}
+
+.brand-gradient {
+  background: var(--ceebase-brand-gradient);
+}
+
+.brand-gradient-h {
+  background: var(--ceebase-brand-gradient-h);
+}
+
+.text-azure-gradient {
+  background: var(--ceebase-brand-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

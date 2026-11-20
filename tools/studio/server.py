@@ -174,6 +174,8 @@ class StudioHandler(GatewayHandler):
 
         if path in ("/", "/index.html"):
             self.serve_file(self.static_dir / "index.html", "text/html")
+        elif path == "/tokens.css":
+            self.serve_file(self.static_dir / "tokens.css", "text/css")
         elif path in ("/health", "/api/v1/health"):
             uptime = round(time.time() - self.backend.start_time, 2)
             self.send_json({

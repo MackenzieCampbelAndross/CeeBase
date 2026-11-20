@@ -24,13 +24,13 @@ pub fn render_ui(frame: &mut Frame, app: &App) {
 
 fn render_header(frame: &mut Frame, app: &App, area: Rect) {
     let header_line = Line::from(vec![
-        Span::styled(" CeeBase ", Style::default().fg(Color::Black).bg(PASTEL_THEME.powder_blue).add_modifier(Modifier::BOLD)),
+        Span::styled(" CeeBase ", Style::default().fg(Color::White).bg(PASTEL_THEME.dark_azure).add_modifier(Modifier::BOLD)),
         Span::raw("  "),
-        Span::styled(&app.database_name, Style::default().fg(PASTEL_THEME.lavender).add_modifier(Modifier::BOLD)),
+        Span::styled(&app.database_name, Style::default().fg(PASTEL_THEME.light_azure).add_modifier(Modifier::BOLD)),
         Span::raw("  │  "),
         Span::styled(format!("v{}", app.engine_version), Style::default().fg(PASTEL_THEME.muted_text)),
         Span::raw("  │  "),
-        Span::styled("● CONNECTED", Style::default().fg(PASTEL_THEME.mint)),
+        Span::styled("● CONNECTED", Style::default().fg(PASTEL_THEME.primary_soft)),
         Span::raw("   "),
         Span::styled("Tab: Complete  ↑/↓: History  /help: Commands  Ctrl+Q: Quit", Style::default().fg(PASTEL_THEME.muted_text)),
     ]);
